@@ -15,6 +15,7 @@ export default function ClientDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<'purchases' | 'qr' | 'promo'>('purchases');
+    const [qrModalOpen, setQrModalOpen] = useState(false);
 
     const fetchAllData = useCallback(async () => {
         if (!user?.email) return;
@@ -193,8 +194,11 @@ export default function ClientDashboard() {
                         Muestra este código en caja para sumar compras o canjear tus premios.
                     </p>
 
-                    <div style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px' }}>
-                        <QRCode value={client.qr_code || ''} size={220} />
+                    <div
+                        style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px', cursor: 'pointer' }}
+                        onClick={() => setQrModalOpen(true)}
+                    >
+                        <QRCode value={client.qr_code || ''} size={180} />
                     </div>
 
                     <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
@@ -206,6 +210,40 @@ export default function ClientDashboard() {
                             DNI: {client.dni}
                         </p>
                     )}
+
+                    <button
+                        className="btn btn-primary"
+                        style={{ marginTop: '1.5rem', width: '100%' }}
+                        onClick={() => setQrModalOpen(true)}
+                    >
+                        Abrir QR en pantalla completa
+                    </button>
+                </div>
+            )}
+
+            {/* QR Fullscreen Modal */}
+            {qrModalOpen && (
+                <div className="qr-fullscreen-overlay" onClick={() => setQrModalOpen(false)}>
+                    <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
+                        <div style={{ padding: '1.5rem', backgroundColor: 'white', borderRadius: '20px', display: 'inline-block' }}>
+                            <QRCode value={client.qr_code || ''} size={280} />
+                        </div>
+                        <p style={{ marginTop: '1.5rem', fontWeight: 700, letterSpacing: '3px', fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>
+                            {(client.qr_code || '').toUpperCase()}
+                        </p>
+                        {client.dni && (
+                            <p style={{ marginTop: '0.5rem', fontSize: '1rem', color: 'var(--color-text-muted)' }}>
+                                DNI: {client.dni}
+                            </p>
+                        )}
+                        <button
+                            className="btn btn-outline"
+                            style={{ marginTop: '2rem', fontSize: '1.1rem', padding: '0.85rem 2.5rem' }}
+                            onClick={() => setQrModalOpen(false)}
+                        >
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
             )}
 

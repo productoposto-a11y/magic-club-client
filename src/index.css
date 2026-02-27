@@ -395,6 +395,31 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* QR Fullscreen Modal */
+.qr-fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.qr-fullscreen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .flex-cards {
