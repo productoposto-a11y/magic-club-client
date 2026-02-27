@@ -7,7 +7,8 @@ export const apiClient = axios.create({
   baseURL: API_URL,
   withCredentials: true, // Required to send and receive HttpOnly Cookies
   headers: {
-    'bypass-tunnel-reminder': 'true'
+    'bypass-tunnel-reminder': 'true',
+    'ngrok-skip-browser-warning': 'true'
   }
 });
 
