@@ -7,8 +7,14 @@ import type { ClientProfileResponse, StoreStats, StorePurchaseItem } from '../..
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
 interface ConfirmAction {
-    type: 'purchase' | 'redeem';
+    type: 'purchase' | 'purchase_and_redeem';
     message: string;
+}
+
+interface TxSummary {
+    purchaseAmount: number;
+    discountAmount: number;
+    netAmount: number;
 }
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -31,6 +37,7 @@ export default function StorePos() {
     const [amountError, setAmountError] = useState('');
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
     const [lastTxSuccess, setLastTxSuccess] = useState('');
+    const [txSummary, setTxSummary] = useState<TxSummary | null>(null);
 
     // === PURCHASES TAB STATE ===
     const [storePurchases, setStorePurchases] = useState<StorePurchaseItem[]>([]);
@@ -96,45 +103,57 @@ export default function StorePos() {
         return true;
     };
 
-    const requestConfirmation = (type: 'purchase' | 'redeem') => {
-        if (type === 'purchase') {
-            if (!validateAmount()) return;
+    const requestConfirmation = (type: 'purchase' | 'purchase_and_redeem') => {
+        if (!validateAmount()) return;
+        const amount = rawAmount();
+
+        if (type === 'purchase_and_redeem' && clientData) {
+            const discount = clientData.status.available_discount;
             setConfirmAction({
-                type: 'purchase',
-                message: `¿Registrar compra de ${fmtPrice(rawAmount())}?`,
+                type: 'purchase_and_redeem',
+                message: `¿Registrar compra de ${fmtPrice(amount)} y aplicar descuento de ${fmtPrice(discount)}? El cliente paga ${fmtPrice(amount - discount)}.`,
             });
         } else {
-            if (!clientData) return;
             setConfirmAction({
-                type: 'redeem',
-                message: `¿Confirmar descuento de ${fmtPrice(clientData.status.available_discount)}?`,
+                type: 'purchase',
+                message: `¿Registrar compra de ${fmtPrice(amount)}?`,
             });
         }
     };
 
-    const processTransaction = async (type: 'purchase' | 'redeem') => {
+    const processTransaction = async (type: 'purchase' | 'purchase_and_redeem') => {
         if (!clientData) return;
         setLoadingTx(true);
         setTxError('');
         setTxSuccess('');
         setConfirmAction(null);
 
-        try {
-            let successMsg: string;
-            if (type === 'redeem') {
-                await redeemReward(clientData.client.id, STORE_ID, clientData.status.available_discount);
-                successMsg = `¡Premio canjeado! Descuento aplicado: ${fmtPrice(clientData.status.available_discount)}`;
-            } else {
-                const amount = rawAmount();
-                await createPurchase(clientData.client.id, STORE_ID, amount);
-                successMsg = `¡Compra de ${fmtPrice(amount)} registrada exitosamente!`;
-                setPurchaseAmount('');
-            }
+        const amount = rawAmount();
 
-            // Close client modal, show success, and invalidate cached tab data
-            setClientData(null);
-            setLastTxSuccess(successMsg);
-            setDataVersion(v => v + 1);
+        try {
+            // Always create the purchase first
+            await createPurchase(clientData.client.id, STORE_ID, amount);
+
+            if (type === 'purchase_and_redeem') {
+                // Then redeem the reward
+                const discount = clientData.status.available_discount;
+                await redeemReward(clientData.client.id, STORE_ID, discount);
+
+                // Show summary modal
+                setPurchaseAmount('');
+                setClientData(null);
+                setTxSummary({
+                    purchaseAmount: amount,
+                    discountAmount: discount,
+                    netAmount: amount - discount,
+                });
+                setDataVersion(v => v + 1);
+            } else {
+                setPurchaseAmount('');
+                setClientData(null);
+                setLastTxSuccess(`¡Compra de ${fmtPrice(amount)} registrada exitosamente!`);
+                setDataVersion(v => v + 1);
+            }
         } catch (err: any) {
             setTxError(extractApiError(err, err.message || 'Error procesando la transacción.'));
         } finally {
@@ -287,38 +306,104 @@ export default function StorePos() {
                         {txSuccess && <div className="alert-success">{txSuccess}</div>}
                         {txError && <div className="alert-error">{txError}</div>}
 
-                        {clientData.status.reward_available ? (
-                            <div style={{ padding: '1.5rem', backgroundColor: '#fdf2f8', border: '2px solid var(--color-secondary)', borderRadius: 'var(--border-radius)' }}>
-                                <h3 style={{ color: 'var(--color-secondary)', marginBottom: '0.5rem' }}>¡Premio Disponible!</h3>
-                                <p style={{ marginBottom: '1.5rem' }}>Descuento a favor de <strong>{fmtPrice(clientData.status.available_discount)}</strong></p>
-
-                                <button onClick={() => requestConfirmation('redeem')} className="btn" style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }} disabled={loadingTx}>
-                                    {loadingTx ? 'Procesando...' : 'Aplicar Descuento y Canjear'}
-                                </button>
-                            </div>
-                        ) : (
-                            <div>
-                                <div className="input-group">
-                                    <label className="input-label">Monto de Carga ($)</label>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        className="input-field"
-                                        placeholder="Ej. 15.000"
-                                        value={purchaseAmount}
-                                        onChange={(e) => {
-                                            setPurchaseAmount(formatPrice(e.target.value));
-                                            setAmountError('');
-                                        }}
-                                        style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '1px' }}
-                                    />
-                                    {amountError && <p className="input-error">{amountError}</p>}
-                                </div>
-                                <button onClick={() => requestConfirmation('purchase')} className="btn btn-primary" style={{ width: '100%' }} disabled={loadingTx || !purchaseAmount}>
-                                    {loadingTx ? 'Procesando...' : 'Registrar Nueva Compra'}
-                                </button>
+                        {clientData.status.reward_available && (
+                            <div style={{ padding: '1rem', backgroundColor: '#fdf2f8', border: '2px solid var(--color-secondary)', borderRadius: 'var(--border-radius)', marginBottom: '1.5rem' }}>
+                                <h3 style={{ color: 'var(--color-secondary)', marginBottom: '0.25rem', fontSize: '1rem' }}>¡Premio Disponible!</h3>
+                                <p style={{ fontSize: '0.9rem' }}>Descuento a favor: <strong>{fmtPrice(clientData.status.available_discount)}</strong></p>
                             </div>
                         )}
+
+                        <div>
+                            <div className="input-group">
+                                <label className="input-label">Monto de la Compra ($)</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className="input-field"
+                                    placeholder="Ej. 15.000"
+                                    value={purchaseAmount}
+                                    onChange={(e) => {
+                                        setPurchaseAmount(formatPrice(e.target.value));
+                                        setAmountError('');
+                                    }}
+                                    style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '1px' }}
+                                />
+                                {amountError && <p className="input-error">{amountError}</p>}
+                            </div>
+
+                            {clientData.status.reward_available && purchaseAmount && (
+                                <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                        <span>Compra</span>
+                                        <span>{fmtPrice(rawAmount())}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', color: 'var(--color-secondary)' }}>
+                                        <span>Descuento</span>
+                                        <span>-{fmtPrice(clientData.status.available_discount)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                                        <span>Total a cobrar</span>
+                                        <span>{fmtPrice(Math.max(0, rawAmount() - clientData.status.available_discount))}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {clientData.status.reward_available ? (
+                                <button
+                                    onClick={() => requestConfirmation('purchase_and_redeem')}
+                                    className="btn"
+                                    style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }}
+                                    disabled={loadingTx || !purchaseAmount}
+                                >
+                                    {loadingTx ? 'Procesando...' : 'Registrar Compra y Aplicar Descuento'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => requestConfirmation('purchase')}
+                                    className="btn btn-primary"
+                                    style={{ width: '100%' }}
+                                    disabled={loadingTx || !purchaseAmount}
+                                >
+                                    {loadingTx ? 'Procesando...' : 'Registrar Nueva Compra'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Transaction Summary Modal */}
+            {txSummary && (
+                <div className="modal-overlay" onClick={() => { setTxSummary(null); }}>
+                    <div className="modal" style={{ maxWidth: '420px', width: '95%' }} onClick={(e) => e.stopPropagation()}>
+                        <h3 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Resumen de Operación</h3>
+
+                        <div style={{ padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '1rem' }}>
+                                <span>Compra registrada</span>
+                                <span style={{ fontWeight: 600 }}>{fmtPrice(txSummary.purchaseAmount)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '1rem', color: 'var(--color-secondary)' }}>
+                                <span>Descuento aplicado</span>
+                                <span style={{ fontWeight: 600 }}>-{fmtPrice(txSummary.discountAmount)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: 700, borderTop: '2px solid var(--color-border)', paddingTop: '0.75rem', marginTop: '0.25rem' }}>
+                                <span>Total cobrado</span>
+                                <span style={{ color: 'var(--color-success)' }}>{fmtPrice(txSummary.netAmount)}</span>
+                            </div>
+                        </div>
+
+                        <div className="alert-success" style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                            Operación completada exitosamente
+                        </div>
+
+                        <button
+                            className="btn btn-primary"
+                            style={{ width: '100%' }}
+                            onClick={() => setTxSummary(null)}
+                        >
+                            Cerrar
+                        </button>
                     </div>
                 </div>
             )}
