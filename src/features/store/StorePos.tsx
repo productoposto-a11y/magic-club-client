@@ -35,9 +35,7 @@ export default function StorePos() {
             setClientData(data);
             setScannerActive(false);
         } catch (err: any) {
-            const status = err.response?.status || 'sin respuesta';
-            const apiMsg = extractApiError(err, '');
-            setSearchError(`[DEBUG] Buscó: "${identifier}" | Status: ${status} | Error: ${apiMsg || err.message || 'desconocido'}`);
+            setSearchError(extractApiError(err, 'Cliente no encontrado.'));
         } finally {
             setLoadingSearch(false);
         }
