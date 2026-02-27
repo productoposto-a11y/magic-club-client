@@ -4,7 +4,7 @@ import { getClientProfile, getClientPurchases, getClientRewards } from '../../co
 import type { ClientProfileResponse, Purchase, Reward } from '../../core/types/api';
 import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSENotifications';
 import { toast } from 'sonner';
-import QRCode from 'react-qr-code';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -203,7 +203,7 @@ export default function ClientDashboard() {
                         style={{ cursor: 'pointer', border: '1px solid var(--color-border)' }}
                         onClick={() => setQrModalOpen(true)}
                     >
-                        <QRCode value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" level="H" />
+                        <QRCodeCanvas value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
                     </div>
 
                     <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
@@ -231,7 +231,7 @@ export default function ClientDashboard() {
                 <div className="qr-fullscreen-overlay" onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
                         <div className="qr-container" style={{ padding: '24px', borderRadius: '20px' }}>
-                            <QRCode value={client.qr_code || ''} size={280} bgColor="#FFFFFF" fgColor="#000000" level="H" />
+                            <QRCodeCanvas value={client.qr_code || ''} size={280} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
                         </div>
                         <p style={{ marginTop: '1.5rem', fontWeight: 700, letterSpacing: '3px', fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>
                             {(client.qr_code || '').toUpperCase()}
