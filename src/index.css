@@ -419,6 +419,11 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes scanLine {
+  0%, 100% { top: 10%; }
+  50% { top: 85%; }
+}
+
 /* Inline spinner for buttons */
 .spinner-inline {
   display: inline-block;

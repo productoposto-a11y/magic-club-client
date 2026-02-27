@@ -20,7 +20,7 @@ interface TxSummary {
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function StorePos() {
-    const { logout, loggingOut } = useAuth();
+    const { user, logout, loggingOut } = useAuth();
     const [activeTab, setActiveTab] = useState<'scan' | 'purchases' | 'dashboard'>('scan');
 
     // === SCAN TAB STATE ===
@@ -216,6 +216,12 @@ export default function StorePos() {
             fetchStats();
         }
     }, [activeTab, dataVersion]);
+
+    if (!user) {
+        logout();
+        window.location.href = '/';
+        return null;
+    }
 
     return (
         <div className="container" style={{ paddingBottom: '2rem' }}>
@@ -561,18 +567,57 @@ export default function StorePos() {
             {scannerActive && (
                 <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#000000' }}>
                     <div className="qr-fullscreen-content" style={{ padding: 0 }}>
-                        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <BarcodeScannerComponent
-                                width="100%"
-                                height="100%"
-                                onUpdate={(err, result) => {
-                                    if (err) { /* ignore */ }
-                                    if (result) {
-                                        setScannerActive(false);
-                                        fetchClient(result.getText());
-                                    }
-                                }}
-                            />
+                        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+
+                            {/* Header */}
+                            <div style={{
+                                position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+                                padding: 'max(1.5rem, env(safe-area-inset-top, 1rem)) 1.5rem 1rem',
+                                background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                                textAlign: 'center',
+                            }}>
+                                <p style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: 700 }}>Escaneá el código QR</p>
+                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Apuntá la cámara al QR del cliente</p>
+                            </div>
+
+                            {/* Camera feed */}
+                            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                                <BarcodeScannerComponent
+                                    width="100%"
+                                    height="100%"
+                                    onUpdate={(err, result) => {
+                                        if (err) { /* ignore */ }
+                                        if (result) {
+                                            setScannerActive(false);
+                                            fetchClient(result.getText());
+                                        }
+                                    }}
+                                />
+                                {/* Scan frame overlay */}
+                                <div style={{
+                                    position: 'absolute', top: '50%', left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    width: 'min(260px, 65vw)', height: 'min(260px, 65vw)',
+                                    border: '3px solid rgba(255,255,255,0.8)',
+                                    borderRadius: '24px',
+                                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.4)',
+                                    pointerEvents: 'none',
+                                }}>
+                                    {/* Corner accents */}
+                                    <div style={{ position: 'absolute', top: -3, left: -3, width: 28, height: 28, borderTop: '4px solid #6366f1', borderLeft: '4px solid #6366f1', borderRadius: '8px 0 0 0' }} />
+                                    <div style={{ position: 'absolute', top: -3, right: -3, width: 28, height: 28, borderTop: '4px solid #6366f1', borderRight: '4px solid #6366f1', borderRadius: '0 8px 0 0' }} />
+                                    <div style={{ position: 'absolute', bottom: -3, left: -3, width: 28, height: 28, borderBottom: '4px solid #6366f1', borderLeft: '4px solid #6366f1', borderRadius: '0 0 0 8px' }} />
+                                    <div style={{ position: 'absolute', bottom: -3, right: -3, width: 28, height: 28, borderBottom: '4px solid #6366f1', borderRight: '4px solid #6366f1', borderRadius: '0 0 8px 0' }} />
+                                    {/* Scan line animation */}
+                                    <div style={{
+                                        position: 'absolute', left: 12, right: 12, height: 2,
+                                        backgroundColor: '#6366f1', borderRadius: 2, opacity: 0.8,
+                                        animation: 'scanLine 2s ease-in-out infinite',
+                                    }} />
+                                </div>
+                            </div>
+
+                            {/* Close button */}
                             <button
                                 onClick={() => setScannerActive(false)}
                                 className="btn"
@@ -583,11 +628,12 @@ export default function StorePos() {
                                     transform: 'translateX(-50%)',
                                     backgroundColor: 'rgba(255,255,255,0.95)',
                                     color: '#0f172a',
-                                    fontSize: '1.1rem',
-                                    padding: '1rem 2.5rem',
-                                    borderRadius: '12px',
+                                    fontSize: '1rem',
+                                    padding: '0.9rem 2rem',
+                                    borderRadius: '50px',
                                     fontWeight: 700,
-                                    minWidth: '200px',
+                                    minWidth: '180px',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
                                 }}
                             >
                                 Cerrar Escáner
