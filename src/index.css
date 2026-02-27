@@ -4,6 +4,8 @@
  */
 
 :root {
+  color-scheme: light only;
+
   /* Color Palette */
   --color-primary: #6366f1; /* Indigo 500 */
   --color-primary-hover: #4f46e5;
