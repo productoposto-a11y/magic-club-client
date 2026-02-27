@@ -207,23 +207,9 @@ export default function StorePos() {
                         <h2 style={{ marginBottom: '1.5rem' }}>Buscar Cliente</h2>
 
                         <div style={{ marginBottom: '2rem' }}>
-                            {scannerActive ? (
-                                <div style={{ borderRadius: '12px', overflow: 'hidden', border: '2px solid var(--color-primary)' }}>
-                                    <BarcodeScannerComponent
-                                        width="100%"
-                                        height={250}
-                                        onUpdate={(err, result) => {
-                                            if (err) { /* ignore */ }
-                                            if (result) fetchClient(result.getText());
-                                        }}
-                                    />
-                                    <button onClick={() => setScannerActive(false)} className="btn btn-outline" style={{ width: '100%', borderRadius: 0 }}>Detener Cámara</button>
-                                </div>
-                            ) : (
-                                <button onClick={() => setScannerActive(true)} className="btn btn-primary" style={{ width: '100%' }}>
-                                    Activar Escáner QR
-                                </button>
-                            )}
+                            <button onClick={() => setScannerActive(true)} className="btn btn-primary" style={{ width: '100%' }}>
+                                Activar Escáner QR
+                            </button>
                         </div>
 
                         <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', marginBottom: '1rem', fontWeight: 600 }}>O</div>
@@ -415,6 +401,45 @@ export default function StorePos() {
                     ) : (
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>No se pudieron cargar las estadísticas.</p>
                     )}
+                </div>
+            )}
+
+            {/* QR Scanner Fullscreen Modal */}
+            {scannerActive && (
+                <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#000000' }}>
+                    <div className="qr-fullscreen-content" style={{ padding: 0 }}>
+                        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <BarcodeScannerComponent
+                                width="100%"
+                                height="100%"
+                                onUpdate={(err, result) => {
+                                    if (err) { /* ignore */ }
+                                    if (result) {
+                                        setScannerActive(false);
+                                        fetchClient(result.getText());
+                                    }
+                                }}
+                            />
+                            <button
+                                onClick={() => setScannerActive(false)}
+                                className="btn"
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '2rem',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    backgroundColor: 'rgba(255,255,255,0.95)',
+                                    color: '#0f172a',
+                                    fontSize: '1.1rem',
+                                    padding: '0.85rem 2.5rem',
+                                    borderRadius: '12px',
+                                    fontWeight: 700,
+                                }}
+                            >
+                                Cerrar Escáner
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
