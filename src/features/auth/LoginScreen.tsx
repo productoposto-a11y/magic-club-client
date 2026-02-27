@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { loginWithPassword as apiLoginWithPassword } from '../../core/auth/authService';
 import { requestMagicLink } from '../../core/auth/authService';
 import { registerClient } from '../../core/api/clientService';
+import { extractApiError } from '../../core/api/errors';
 
 export default function LoginScreen() {
     const { user, loginWithTokens } = useAuth();
@@ -86,7 +87,7 @@ export default function LoginScreen() {
                 setSuccessMagic(true);
             }
         } catch (err: any) {
-            setErrorMagic(err.response?.data?.error?.message || err.response?.data?.error?.email || 'Error en la autenticación. Verifica tus datos.');
+            setErrorMagic(extractApiError(err, 'Error en la autenticación. Verifica tus datos.'));
         } finally {
             setLoadingMagic(false);
         }
@@ -105,7 +106,7 @@ export default function LoginScreen() {
             if (regPassword) setLoginWithPasswordToggle(true);
             setTimeout(() => setActiveTab('login'), 2000);
         } catch (err: any) {
-            setErrorReg(err.response?.data?.error?.email || err.response?.data?.error?.message || 'Error al crear la cuenta.');
+            setErrorReg(extractApiError(err, 'Error al crear la cuenta.'));
         } finally {
             setLoadingReg(false);
         }
@@ -120,7 +121,7 @@ export default function LoginScreen() {
             const data = await apiLoginWithPassword(emailPass, password);
             processAuthResponse(data, '/store');
         } catch (err: any) {
-            setErrorPass(err.response?.data?.error?.message || 'Credenciales incorrectas');
+            setErrorPass(extractApiError(err, 'Credenciales incorrectas'));
         } finally {
             setLoadingPass(false);
         }

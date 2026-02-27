@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getClientProfile, createPurchase, redeemReward } from '../../core/api/clientService';
+import { extractApiError } from '../../core/api/errors';
 import type { ClientProfileResponse } from '../../core/types/api';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
@@ -34,7 +35,7 @@ export default function StorePos() {
             setClientData(data);
             setScannerActive(false); // Stop scanner if found
         } catch (err: any) {
-            setSearchError(err.response?.data?.error?.message || 'Cliente no encontrado.');
+            setSearchError(extractApiError(err, 'Cliente no encontrado.'));
         } finally {
             setLoadingSearch(false);
         }
@@ -80,7 +81,7 @@ export default function StorePos() {
             await refreshClientData();
 
         } catch (err: any) {
-            setTxError(err.response?.data?.error?.message || err.message || 'Error procesando la transacción.');
+            setTxError(extractApiError(err, err.message || 'Error procesando la transacción.'));
         } finally {
             setLoadingTx(false);
         }

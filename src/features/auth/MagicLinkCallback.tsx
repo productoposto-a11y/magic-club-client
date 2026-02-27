@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { setTokens } from '../../core/api/axios';
 import { authenticateMagicLink } from '../../core/auth/authService';
+import { extractApiError } from '../../core/api/errors';
 import { useAuth } from '../../core/auth/AuthContext';
 
 export default function MagicLinkCallback() {
@@ -49,7 +50,7 @@ export default function MagicLinkCallback() {
 
                 navigate('/client', { replace: true });
             } catch (err: any) {
-                setError(err.response?.data?.error?.message || 'El enlace mágico ha expirado o ya fue utilizado.');
+                setError(extractApiError(err, 'El enlace mágico ha expirado o ya fue utilizado.'));
             }
         };
 
