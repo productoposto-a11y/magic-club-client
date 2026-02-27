@@ -20,7 +20,7 @@ interface TxSummary {
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function StorePos() {
-    const { logout } = useAuth();
+    const { logout, loggingOut } = useAuth();
     const [activeTab, setActiveTab] = useState<'scan' | 'purchases' | 'dashboard'>('scan');
 
     // === SCAN TAB STATE ===
@@ -222,7 +222,9 @@ export default function StorePos() {
 
             <div className="page-header">
                 <h1>Terminal Sucursal</h1>
-                <button onClick={logout} className="btn btn-outline">Salir</button>
+                <button onClick={logout} className="btn btn-outline" disabled={loggingOut}>
+                    {loggingOut ? <><span className="spinner-inline-dark"></span>Saliendo...</> : 'Salir'}
+                </button>
             </div>
 
             {/* Tab Navigation */}
@@ -251,7 +253,7 @@ export default function StorePos() {
 
             {/* === SCAN TAB === */}
             {activeTab === 'scan' && (
-                <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+                <div className="fade-in" style={{ maxWidth: '500px', margin: '0 auto' }}>
                     {lastTxSuccess && (
                         <div className="alert-success" style={{ marginBottom: '1rem', cursor: 'pointer' }} onClick={() => setLastTxSuccess('')}>
                             {lastTxSuccess}
@@ -260,31 +262,40 @@ export default function StorePos() {
                     <div className="card">
                         <h2 style={{ marginBottom: '1.5rem' }}>Buscar Cliente</h2>
 
-                        <div style={{ marginBottom: '2rem' }}>
-                            <button onClick={() => setScannerActive(true)} className="btn btn-primary" style={{ width: '100%' }}>
-                                Activar Escáner QR
-                            </button>
-                        </div>
-
-                        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', marginBottom: '1rem', fontWeight: 600 }}>O</div>
-
-                        <form onSubmit={handleManualSearch}>
-                            <div className="input-group">
-                                <label className="input-label">Ingresar DNI manualmente</label>
-                                <input
-                                    type="text"
-                                    className="input-field"
-                                    placeholder="Ej. 35123456"
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
-                                />
+                        {loadingSearch ? (
+                            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                                <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>Buscando cliente...</p>
                             </div>
-                            <button type="submit" className="btn btn-outline" style={{ width: '100%' }} disabled={loadingSearch || !searchInput}>
-                                {loadingSearch ? 'Buscando...' : 'Buscar por DNI'}
-                            </button>
-                        </form>
+                        ) : (
+                            <>
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <button onClick={() => setScannerActive(true)} className="btn btn-primary" style={{ width: '100%' }}>
+                                        Activar Escáner QR
+                                    </button>
+                                </div>
 
-                        {searchError && <p className="input-error" style={{ marginTop: '1rem' }}>{searchError}</p>}
+                                <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', marginBottom: '1rem', fontWeight: 600 }}>O</div>
+
+                                <form onSubmit={handleManualSearch}>
+                                    <div className="input-group">
+                                        <label className="input-label">Ingresar DNI manualmente</label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            placeholder="Ej. 35123456"
+                                            value={searchInput}
+                                            onChange={(e) => setSearchInput(e.target.value)}
+                                        />
+                                    </div>
+                                    <button type="submit" className="btn btn-outline" style={{ width: '100%' }} disabled={!searchInput}>
+                                        Buscar por DNI
+                                    </button>
+                                </form>
+
+                                {searchError && <p className="input-error" style={{ marginTop: '1rem' }}>{searchError}</p>}
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -361,7 +372,7 @@ export default function StorePos() {
                                     style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }}
                                     disabled={loadingTx || !purchaseAmount}
                                 >
-                                    {loadingTx ? 'Procesando...' : 'Registrar Compra y Aplicar Descuento'}
+                                    {loadingTx ? <><span className="spinner-inline"></span>Procesando...</> : 'Registrar Compra y Aplicar Descuento'}
                                 </button>
                             ) : (
                                 <button
@@ -370,7 +381,7 @@ export default function StorePos() {
                                     style={{ width: '100%' }}
                                     disabled={loadingTx || !purchaseAmount}
                                 >
-                                    {loadingTx ? 'Procesando...' : 'Registrar Nueva Compra'}
+                                    {loadingTx ? <><span className="spinner-inline"></span>Procesando...</> : 'Registrar Nueva Compra'}
                                 </button>
                             )}
                         </div>
@@ -416,7 +427,7 @@ export default function StorePos() {
 
             {/* === PURCHASES TAB === */}
             {activeTab === 'purchases' && (
-                <div className="card">
+                <div className="card fade-in">
                     <h2 style={{ marginBottom: '1.5rem' }}>Compras de esta Sucursal</h2>
 
                     {loadingPurchases ? (
@@ -514,7 +525,7 @@ export default function StorePos() {
 
             {/* === DASHBOARD TAB === */}
             {activeTab === 'dashboard' && (
-                <div>
+                <div className="fade-in">
                     <h2 style={{ marginBottom: '1.5rem' }}>Dashboard</h2>
 
                     {loadingStats ? (

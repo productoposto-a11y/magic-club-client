@@ -101,10 +101,14 @@ body {
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   border: none;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -270,8 +274,12 @@ body {
   font-weight: 400;
   font-size: 1rem;
   color: #64748b !important;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn:active {
+  transform: scale(0.97);
 }
 
 .tab-btn.active {
@@ -300,6 +308,10 @@ body {
   color: #64748b !important;
   text-transform: uppercase;
   font-size: 0.8rem;
+}
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
 .table tbody tr:hover {
@@ -405,6 +417,41 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Inline spinner for buttons */
+.spinner-inline {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+.spinner-inline-dark {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(0,0,0,0.15);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+/* Fade-in animation for tab content */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-out;
 }
 
 /* QR Container - Dark mode safe zone */

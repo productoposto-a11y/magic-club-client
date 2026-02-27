@@ -9,7 +9,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function ClientDashboard() {
-    const { user, logout } = useAuth();
+    const { user, logout, loggingOut } = useAuth();
 
     const [clientData, setClientData] = useState<ClientProfileResponse | null>(null);
     const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -106,7 +106,9 @@ export default function ClientDashboard() {
 
             <div className="page-header">
                 <h1>Magic Club</h1>
-                <button onClick={logout} className="btn btn-outline">Salir</button>
+                <button onClick={logout} className="btn btn-outline" disabled={loggingOut}>
+                    {loggingOut ? <><span className="spinner-inline-dark"></span>Saliendo...</> : 'Salir'}
+                </button>
             </div>
 
             {/* Tab Navigation */}
@@ -135,7 +137,7 @@ export default function ClientDashboard() {
 
             {/* Tab Content */}
             {activeTab === 'purchases' && (
-                <div className="card">
+                <div className="card fade-in">
                     <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mis Compras</h2>
                     {purchases.length === 0 ? (
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no tienes compras registradas.</p>
@@ -195,7 +197,7 @@ export default function ClientDashboard() {
             )}
 
             {activeTab === 'qr' && (
-                <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left', fontSize: '1.15rem' }}>Tu Pase Mágico</h2>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', width: '100%', textAlign: 'left' }}>
                         Muestra este código en caja para sumar compras o canjear tus premios.
@@ -256,7 +258,7 @@ export default function ClientDashboard() {
             )}
 
             {activeTab === 'promo' && (
-                <div className="card">
+                <div className="card fade-in">
                     <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mi Promoción</h2>
 
                     <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', textAlign: 'center', marginBottom: '1rem' }}>
