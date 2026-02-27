@@ -201,9 +201,8 @@ export default function StorePos() {
 
             {/* === SCAN TAB === */}
             {activeTab === 'scan' && (
-                <div className="flex-cards">
-                    {/* Scanner Panel */}
-                    <div className="card" style={{ flex: '1 1 300px' }}>
+                <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+                    <div className="card">
                         <h2 style={{ marginBottom: '1.5rem' }}>Buscar Cliente</h2>
 
                         <div style={{ marginBottom: '2rem' }}>
@@ -232,57 +231,61 @@ export default function StorePos() {
 
                         {searchError && <p className="input-error" style={{ marginTop: '1rem' }}>{searchError}</p>}
                     </div>
+                </div>
+            )}
 
-                    {/* Transaction Panel */}
-                    <div className="card" style={{ flex: '1 1 400px' }}>
-                        <h2 style={{ marginBottom: '1.5rem' }}>Gestión de Venta</h2>
+            {/* Client Transaction Modal */}
+            {clientData && (
+                <div className="modal-overlay" onClick={() => { setClientData(null); setTxSuccess(''); setTxError(''); setPurchaseAmount(''); }}>
+                    <div className="modal" style={{ maxWidth: '480px', width: '95%' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                            <h3 style={{ margin: 0 }}>Gestión de Venta</h3>
+                            <button
+                                onClick={() => { setClientData(null); setTxSuccess(''); setTxError(''); setPurchaseAmount(''); }}
+                                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--color-text-muted)', lineHeight: 1 }}
+                            >
+                                &times;
+                            </button>
+                        </div>
 
-                        {!clientData ? (
-                            <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', border: '1px dashed var(--color-border)' }}>
-                                Escanea un QR o busca un DNI para comenzar.
+                        <div style={{ padding: '1rem', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{clientData.client.email}</h3>
+                            {clientData.client.dni && <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>DNI: {clientData.client.dni}</p>}
+                            <p>Compras activas: <strong>{clientData.status.active_purchases_count} / 5</strong></p>
+                        </div>
+
+                        {txSuccess && <div className="alert-success">{txSuccess}</div>}
+                        {txError && <div className="alert-error">{txError}</div>}
+
+                        {clientData.status.reward_available ? (
+                            <div style={{ padding: '1.5rem', backgroundColor: '#fdf2f8', border: '2px solid var(--color-secondary)', borderRadius: 'var(--border-radius)' }}>
+                                <h3 style={{ color: 'var(--color-secondary)', marginBottom: '0.5rem' }}>¡Premio Disponible!</h3>
+                                <p style={{ marginBottom: '1.5rem' }}>Descuento a favor de <strong>${clientData.status.available_discount.toFixed(2)}</strong></p>
+
+                                <button onClick={() => requestConfirmation('redeem')} className="btn" style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }} disabled={loadingTx}>
+                                    {loadingTx ? 'Procesando...' : 'Aplicar Descuento y Canjear'}
+                                </button>
                             </div>
                         ) : (
                             <div>
-                                <div style={{ padding: '1rem', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', marginBottom: '1.5rem' }}>
-                                    <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Cliente: {clientData.client.email}</h3>
-                                    {clientData.client.dni && <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>DNI: {clientData.client.dni}</p>}
-                                    <p>Compras activas: <strong>{clientData.status.active_purchases_count} / 5</strong></p>
+                                <div className="input-group">
+                                    <label className="input-label">Monto de Carga ($)</label>
+                                    <input
+                                        type="number"
+                                        className="input-field"
+                                        placeholder="Ej. 15000"
+                                        value={purchaseAmount}
+                                        onChange={(e) => {
+                                            setPurchaseAmount(Number(e.target.value) || '');
+                                            setAmountError('');
+                                        }}
+                                        min="1"
+                                    />
+                                    {amountError && <p className="input-error">{amountError}</p>}
                                 </div>
-
-                                {txSuccess && <div className="alert-success">{txSuccess}</div>}
-                                {txError && <div className="alert-error">{txError}</div>}
-
-                                {clientData.status.reward_available ? (
-                                    <div style={{ padding: '1.5rem', backgroundColor: '#fdf2f8', border: '2px solid var(--color-secondary)', borderRadius: 'var(--border-radius)' }}>
-                                        <h3 style={{ color: 'var(--color-secondary)', marginBottom: '0.5rem' }}>¡Premio Disponible!</h3>
-                                        <p style={{ marginBottom: '1.5rem' }}>El cliente tiene un descuento a favor de <strong>${clientData.status.available_discount.toFixed(2)}</strong></p>
-
-                                        <button onClick={() => requestConfirmation('redeem')} className="btn" style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }} disabled={loadingTx}>
-                                            {loadingTx ? 'Procesando...' : 'Aplicar Descuento y Canjear'}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <div className="input-group">
-                                            <label className="input-label">Monto de Carga ($)</label>
-                                            <input
-                                                type="number"
-                                                className="input-field"
-                                                placeholder="Ej. 15000"
-                                                value={purchaseAmount}
-                                                onChange={(e) => {
-                                                    setPurchaseAmount(Number(e.target.value) || '');
-                                                    setAmountError('');
-                                                }}
-                                                min="1"
-                                            />
-                                            {amountError && <p className="input-error">{amountError}</p>}
-                                        </div>
-                                        <button onClick={() => requestConfirmation('purchase')} className="btn btn-primary" style={{ width: '100%' }} disabled={loadingTx || !purchaseAmount}>
-                                            {loadingTx ? 'Procesando...' : 'Registrar Nueva Compra'}
-                                        </button>
-                                    </div>
-                                )}
+                                <button onClick={() => requestConfirmation('purchase')} className="btn btn-primary" style={{ width: '100%' }} disabled={loadingTx || !purchaseAmount}>
+                                    {loadingTx ? 'Procesando...' : 'Registrar Nueva Compra'}
+                                </button>
                             </div>
                         )}
                     </div>
