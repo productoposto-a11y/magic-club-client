@@ -23,39 +23,78 @@ export function useSSENotifications({ onEvent, enabled }: UseSSENotificationsOpt
     useEffect(() => {
         if (!enabled) return;
 
-        let eventSource: EventSource | null = null;
+        let abortController: AbortController | null = null;
         let reconnectTimeout: ReturnType<typeof setTimeout>;
         let closed = false;
 
-        function connect() {
+        async function connect() {
             if (closed) return;
 
             const token = getAccessToken();
             if (!token) return;
 
-            eventSource = new EventSource(`${API_URL}/events?token=${encodeURIComponent(token)}`);
+            abortController = new AbortController();
 
-            const handleEvent = (e: MessageEvent) => {
-                try {
-                    const data = JSON.parse(e.data);
-                    onEventRef.current({ type: e.type as SSEEventData['type'], data });
-                } catch {
-                    // Ignore malformed events
+            try {
+                const response = await fetch(`${API_URL}/events`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'bypass-tunnel-reminder': 'true',
+                        'ngrok-skip-browser-warning': 'true',
+                    },
+                    signal: abortController.signal,
+                });
+
+                if (!response.ok || !response.body) {
+                    throw new Error(`SSE connection failed: ${response.status}`);
                 }
-            };
 
-            eventSource.addEventListener('purchase_registered', handleEvent);
-            eventSource.addEventListener('reward_redeemed', handleEvent);
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
 
-            eventSource.onerror = () => {
-                eventSource?.close();
-                eventSource = null;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                // Reconnect after 5s, using a fresh token in case it was refreshed
-                if (!closed) {
-                    reconnectTimeout = setTimeout(connect, 5000);
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // Process complete events (separated by double newline)
+                    const parts = buffer.split('\n\n');
+                    buffer = parts.pop() || '';
+
+                    for (const part of parts) {
+                        if (!part.trim()) continue;
+
+                        let eventType = '';
+                        let eventData = '';
+
+                        for (const line of part.split('\n')) {
+                            if (line.startsWith('event: ')) {
+                                eventType = line.slice(7);
+                            } else if (line.startsWith('data: ')) {
+                                eventData = line.slice(6);
+                            }
+                        }
+
+                        if (eventType && eventData) {
+                            try {
+                                const data = JSON.parse(eventData);
+                                onEventRef.current({ type: eventType as SSEEventData['type'], data });
+                            } catch {
+                                // Ignore malformed events
+                            }
+                        }
+                    }
                 }
-            };
+            } catch (err) {
+                if (err instanceof DOMException && err.name === 'AbortError') return;
+            }
+
+            // Reconnect after 5s with a fresh token (handles token refresh)
+            if (!closed) {
+                reconnectTimeout = setTimeout(connect, 5000);
+            }
         }
 
         connect();
@@ -63,7 +102,7 @@ export function useSSENotifications({ onEvent, enabled }: UseSSENotificationsOpt
         return () => {
             closed = true;
             clearTimeout(reconnectTimeout);
-            eventSource?.close();
+            abortController?.abort();
         };
     }, [enabled]);
 }
