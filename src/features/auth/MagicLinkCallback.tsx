@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { setTokens } from '../../core/api/axios';
 import { authenticateMagicLink } from '../../core/auth/authService';
+import { parseJwt } from '../../core/auth/parseJwt';
 import { extractApiError } from '../../core/api/errors';
 import { useAuth } from '../../core/auth/AuthContext';
 
@@ -31,16 +32,11 @@ export default function MagicLinkCallback() {
 
                 setTokens(accessToken, csrfToken);
 
-                // Parse JWT to extract user claims
-                const base64Url = accessToken.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(
-                    atob(base64)
-                        .split('')
-                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                        .join('')
-                );
-                const decoded = JSON.parse(jsonPayload);
+                const decoded = parseJwt(accessToken);
+                if (!decoded) {
+                    setError('Error procesando el token.');
+                    return;
+                }
 
                 loginWithTokens(accessToken, csrfToken, {
                     id: decoded.sub,

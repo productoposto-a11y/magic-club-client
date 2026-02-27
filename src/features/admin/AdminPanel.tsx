@@ -1,46 +1,148 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
+import { getAdminStats, getAdminClients } from '../../core/api/adminService';
+import type { AdminStats, ClientListItem } from '../../core/types/api';
 
 export default function AdminPanel() {
     const { logout } = useAuth();
 
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [clients, setClients] = useState<ClientListItem[]>([]);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const pageSize = 20;
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await getAdminStats();
+                setStats(data);
+            } catch {
+                setError('Error cargando estadísticas.');
+            }
+        };
+        fetchStats();
+    }, []);
+
+    useEffect(() => {
+        const fetchClients = async () => {
+            setLoading(true);
+            try {
+                const data = await getAdminClients(page, pageSize);
+                setClients(data.clients || []);
+                setTotalRecords(data.metadata.total_records);
+            } catch {
+                setError('Error cargando clientes.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchClients();
+    }, [page]);
+
+    const totalPages = Math.ceil(totalRecords / pageSize);
+
     return (
         <div className="container" style={{ paddingBottom: '4rem' }}>
 
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>Panel de Administración</h1>
-                <button onClick={logout} className="btn" style={{ border: '1px solid var(--color-border)' }}>Salir</button>
+            <div className="page-header">
+                <h1>Panel de Administración</h1>
+                <button onClick={logout} className="btn btn-outline">Salir</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            {error && <div className="alert-error">{error}</div>}
 
-                <div className="card" style={{ flex: '1 1 100%' }}>
-                    <h2 style={{ marginBottom: '1.5rem' }}>Métricas Globales (Próximamente)</h2>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-
-                        <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', border: '1px solid var(--color-border)' }}>
-                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Total Clientes</p>
-                            <p style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)' }}>---</p>
-                        </div>
-
-                        <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', border: '1px solid var(--color-border)' }}>
-                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Compras Registradas</p>
-                            <p style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-success)' }}>---</p>
-                        </div>
-
-                        <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', border: '1px solid var(--color-border)' }}>
-                            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Premios Entregados</p>
-                            <p style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-secondary)' }}>---</p>
-                        </div>
-
-                    </div>
-
-                    <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#eff6ff', color: '#1d4ed8', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                        <p><strong>Info:</strong> Las métricas detalladas y la creación de sucursales estarán disponibles en la próxima fase. Actualmente el sistema enfoca todos sus recursos en procesar las reglas de negocio entre la Sucursal (Cuidar), Frontend de Clientes, y WooCommerce.</p>
-                    </div>
+            {/* Stats Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                <div className="stat-card">
+                    <p className="stat-label">Total Clientes</p>
+                    <p className="stat-value" style={{ color: 'var(--color-text)' }}>{stats?.total_clients ?? '...'}</p>
                 </div>
+                <div className="stat-card">
+                    <p className="stat-label">Compras Registradas</p>
+                    <p className="stat-value" style={{ color: 'var(--color-success)' }}>{stats?.total_purchases ?? '...'}</p>
+                </div>
+                <div className="stat-card">
+                    <p className="stat-label">Compras Activas</p>
+                    <p className="stat-value" style={{ color: 'var(--color-primary)' }}>{stats?.total_active_purchases ?? '...'}</p>
+                </div>
+                <div className="stat-card">
+                    <p className="stat-label">Premios Entregados</p>
+                    <p className="stat-value" style={{ color: 'var(--color-secondary)' }}>{stats?.total_rewards ?? '...'}</p>
+                </div>
+            </div>
 
+            {/* Clients Table */}
+            <div className="card">
+                <h2 style={{ marginBottom: '1.5rem' }}>Clientes Registrados</h2>
+
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>Cargando...</div>
+                ) : clients.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>No hay clientes registrados.</div>
+                ) : (
+                    <>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>DNI</th>
+                                        <th>Compras Activas</th>
+                                        <th>Total Compras</th>
+                                        <th>Premios</th>
+                                        <th>Estado</th>
+                                        <th>Registro</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {clients.map((c) => (
+                                        <tr key={c.id}>
+                                            <td>{c.email}</td>
+                                            <td>{c.dni || '-'}</td>
+                                            <td>{c.active_purchases_count} / 5</td>
+                                            <td>{c.total_purchases}</td>
+                                            <td>{c.total_rewards}</td>
+                                            <td>
+                                                {c.active_purchases_count >= 5 ? (
+                                                    <span className="badge badge-active">Premio listo</span>
+                                                ) : (
+                                                    <span className="badge badge-used">Acumulando</span>
+                                                )}
+                                            </td>
+                                            <td>{new Date(c.created_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {totalPages > 1 && (
+                            <div className="pagination">
+                                <button
+                                    className="btn btn-outline"
+                                    disabled={page <= 1}
+                                    onClick={() => setPage(p => p - 1)}
+                                >
+                                    Anterior
+                                </button>
+                                <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                                    Página {page} de {totalPages}
+                                </span>
+                                <button
+                                    className="btn btn-outline"
+                                    disabled={page >= totalPages}
+                                    onClick={() => setPage(p => p + 1)}
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

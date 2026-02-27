@@ -24,11 +24,21 @@ export async function redeemReward(clientId: string, storeId: string, amountDisc
   return res.data.reward;
 }
 
-export async function registerClient(email: string, password?: string, dni?: string): Promise<{ client: any }> {
+export async function registerClient(email: string, password?: string, dni?: string): Promise<{ client: ClientProfileResponse['client'] }> {
   const res = await apiClient.post('/clients', {
     email,
     password: password || undefined,
     dni: dni || undefined,
   });
   return res.data;
+}
+
+export async function getClientPurchases(identifier: string): Promise<Purchase[]> {
+  const res = await apiClient.get(`/clients/${identifier}/purchases`);
+  return res.data.purchases || [];
+}
+
+export async function getClientRewards(identifier: string): Promise<Reward[]> {
+  const res = await apiClient.get(`/clients/${identifier}/rewards`);
+  return res.data.rewards || [];
 }

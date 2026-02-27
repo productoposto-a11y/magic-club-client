@@ -5,6 +5,11 @@ import { extractApiError } from '../../core/api/errors';
 import type { ClientProfileResponse } from '../../core/types/api';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
+interface ConfirmAction {
+    type: 'purchase' | 'redeem';
+    message: string;
+}
+
 export default function StorePos() {
     const { logout } = useAuth();
     const [scannerActive, setScannerActive] = useState(false);
@@ -20,8 +25,12 @@ export default function StorePos() {
     const [loadingTx, setLoadingTx] = useState(false);
     const [txSuccess, setTxSuccess] = useState('');
     const [txError, setTxError] = useState('');
+    const [amountError, setAmountError] = useState('');
 
-    const STORE_ID = '00000000-0000-0000-0000-000000000000'; // For this MVP we assume the cashier is in the main branch.
+    // Confirmation modal
+    const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+
+    const STORE_ID = '00000000-0000-0000-0000-000000000000';
 
     const fetchClient = async (identifier: string) => {
         setLoadingSearch(true);
@@ -53,8 +62,37 @@ export default function StorePos() {
             const data = await getClientProfile(clientData.client.email);
             setClientData(data);
         } catch {
-            // If refresh fails, clear the client data
             setClientData(null);
+        }
+    };
+
+    const validateAmount = (): boolean => {
+        setAmountError('');
+        const amount = Number(purchaseAmount);
+        if (!purchaseAmount || amount <= 0) {
+            setAmountError('Ingrese un monto mayor a 0.');
+            return false;
+        }
+        if (amount > 10_000_000) {
+            setAmountError('El monto no puede superar $10.000.000.');
+            return false;
+        }
+        return true;
+    };
+
+    const requestConfirmation = (type: 'purchase' | 'redeem') => {
+        if (type === 'purchase') {
+            if (!validateAmount()) return;
+            setConfirmAction({
+                type: 'purchase',
+                message: `¿Registrar compra de $${Number(purchaseAmount).toFixed(2)}?`,
+            });
+        } else {
+            if (!clientData) return;
+            setConfirmAction({
+                type: 'redeem',
+                message: `¿Confirmar descuento de $${clientData.status.available_discount.toFixed(2)}?`,
+            });
         }
     };
 
@@ -63,23 +101,19 @@ export default function StorePos() {
         setLoadingTx(true);
         setTxError('');
         setTxSuccess('');
+        setConfirmAction(null);
 
         try {
             if (type === 'redeem') {
                 await redeemReward(clientData.client.id, STORE_ID, clientData.status.available_discount);
                 setTxSuccess(`¡Premio canjeado! Descuento aplicado: $${clientData.status.available_discount.toFixed(2)}`);
             } else {
-                if (!purchaseAmount || Number(purchaseAmount) <= 0) {
-                    throw new Error('Ingrese un monto válido mayor a 0');
-                }
                 await createPurchase(clientData.client.id, STORE_ID, Number(purchaseAmount));
                 setTxSuccess(`¡Compra de $${Number(purchaseAmount).toFixed(2)} registrada exitosamente!`);
                 setPurchaseAmount('');
             }
 
-            // Refresh client data to show updated status
             await refreshClientData();
-
         } catch (err: any) {
             setTxError(extractApiError(err, err.message || 'Error procesando la transacción.'));
         } finally {
@@ -90,13 +124,12 @@ export default function StorePos() {
     return (
         <div className="container" style={{ paddingBottom: '4rem' }}>
 
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>Terminal Sucursal (Cuidar)</h1>
-                <button onClick={logout} className="btn" style={{ border: '1px solid var(--color-border)' }}>Salir</button>
+            <div className="page-header">
+                <h1>Terminal Sucursal</h1>
+                <button onClick={logout} className="btn btn-outline">Salir</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <div className="flex-cards">
 
                 {/* Scanner Panel */}
                 <div className="card" style={{ flex: '1 1 300px' }}>
@@ -113,7 +146,7 @@ export default function StorePos() {
                                         if (result) fetchClient(result.getText());
                                     }}
                                 />
-                                <button onClick={() => setScannerActive(false)} className="btn" style={{ width: '100%', borderRadius: 0, backgroundColor: 'var(--color-bg)' }}>Detener Cámara</button>
+                                <button onClick={() => setScannerActive(false)} className="btn btn-outline" style={{ width: '100%', borderRadius: 0 }}>Detener Cámara</button>
                             </div>
                         ) : (
                             <button onClick={() => setScannerActive(true)} className="btn btn-primary" style={{ width: '100%' }}>
@@ -135,12 +168,12 @@ export default function StorePos() {
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
                         </div>
-                        <button type="submit" className="btn" style={{ width: '100%', border: '1px solid var(--color-border)' }} disabled={loadingSearch || !searchInput}>
+                        <button type="submit" className="btn btn-outline" style={{ width: '100%' }} disabled={loadingSearch || !searchInput}>
                             {loadingSearch ? 'Buscando...' : 'Buscar por DNI'}
                         </button>
                     </form>
 
-                    {searchError && <p style={{ color: 'var(--color-danger)', marginTop: '1rem', fontSize: '0.9rem' }}>{searchError}</p>}
+                    {searchError && <p className="input-error" style={{ marginTop: '1rem' }}>{searchError}</p>}
                 </div>
 
                 {/* Transaction Panel */}
@@ -158,24 +191,15 @@ export default function StorePos() {
                                 <p>Compras activas: <strong>{clientData.status.active_purchases_count} / 5</strong></p>
                             </div>
 
-                            {txSuccess && (
-                                <div style={{ padding: '1rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                                    {txSuccess}
-                                </div>
-                            )}
-
-                            {txError && (
-                                <div style={{ padding: '1rem', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                                    {txError}
-                                </div>
-                            )}
+                            {txSuccess && <div className="alert-success">{txSuccess}</div>}
+                            {txError && <div className="alert-error">{txError}</div>}
 
                             {clientData.status.reward_available ? (
                                 <div style={{ padding: '1.5rem', backgroundColor: '#fdf2f8', border: '2px solid var(--color-secondary)', borderRadius: 'var(--border-radius)' }}>
                                     <h3 style={{ color: 'var(--color-secondary)', marginBottom: '0.5rem' }}>¡Premio Disponible!</h3>
                                     <p style={{ marginBottom: '1.5rem' }}>El cliente tiene un descuento a favor de <strong>${clientData.status.available_discount.toFixed(2)}</strong></p>
 
-                                    <button onClick={() => processTransaction('redeem')} className="btn" style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }} disabled={loadingTx}>
+                                    <button onClick={() => requestConfirmation('redeem')} className="btn" style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }} disabled={loadingTx}>
                                         {loadingTx ? 'Procesando...' : 'Aplicar Descuento y Canjear'}
                                     </button>
                                 </div>
@@ -188,21 +212,37 @@ export default function StorePos() {
                                             className="input-field"
                                             placeholder="Ej. 15000"
                                             value={purchaseAmount}
-                                            onChange={(e) => setPurchaseAmount(Number(e.target.value) || '')}
+                                            onChange={(e) => {
+                                                setPurchaseAmount(Number(e.target.value) || '');
+                                                setAmountError('');
+                                            }}
                                             min="1"
                                         />
+                                        {amountError && <p className="input-error">{amountError}</p>}
                                     </div>
-                                    <button onClick={() => processTransaction('purchase')} className="btn btn-primary" style={{ width: '100%' }} disabled={loadingTx || !purchaseAmount}>
+                                    <button onClick={() => requestConfirmation('purchase')} className="btn btn-primary" style={{ width: '100%' }} disabled={loadingTx || !purchaseAmount}>
                                         {loadingTx ? 'Procesando...' : 'Registrar Nueva Compra'}
                                     </button>
                                 </div>
                             )}
                         </div>
                     )}
-
                 </div>
-
             </div>
+
+            {/* Confirmation Modal */}
+            {confirmAction && (
+                <div className="modal-overlay" onClick={() => setConfirmAction(null)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <h3>Confirmar Operación</h3>
+                        <p>{confirmAction.message}</p>
+                        <div className="modal-actions">
+                            <button className="btn btn-outline" onClick={() => setConfirmAction(null)}>Cancelar</button>
+                            <button className="btn btn-primary" onClick={() => processTransaction(confirmAction.type)}>Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

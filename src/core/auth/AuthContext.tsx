@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiClient, setTokens } from '../api/axios';
+import { parseJwt } from './parseJwt';
 
 interface AuthUser {
     id: string;
@@ -20,28 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Parse JWT payload to extract user claims
-    const parseJwt = (token: string): AuthUser | null => {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(
-                atob(base64)
-                    .split('')
-                    .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                    .join('')
-            );
-            const decoded = JSON.parse(jsonPayload);
-            return {
-                id: decoded.sub,
-                email: decoded.email,
-                role: decoded.role,
-            };
-        } catch (e) {
-            return null;
-        }
-    };
-
     useEffect(() => {
         // Attempt auto-login smoothly on boot by triggering the refresh endpoint
         const attemptSilentRefresh = async () => {
@@ -51,9 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const csrf = res.data.authentication.csrf_token;
 
                 setTokens(token, csrf);
-                const userData = parseJwt(token);
-                if (userData) {
-                    setUser(userData);
+                const decoded = parseJwt(token);
+                if (decoded) {
+                    setUser({ id: decoded.sub, email: decoded.email, role: decoded.role });
                 }
             } catch (err) {
                 // Expected if no cookie exists or expired. Remain anonymous.

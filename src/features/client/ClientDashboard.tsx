@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { getClientProfile } from '../../core/api/clientService';
-import type { ClientProfileResponse } from '../../core/types/api';
+import { getClientProfile, getClientPurchases, getClientRewards } from '../../core/api/clientService';
+import type { ClientProfileResponse, Purchase, Reward } from '../../core/types/api';
 import QRCode from 'react-qr-code';
 
 export default function ClientDashboard() {
     const { user, logout } = useAuth();
 
     const [clientData, setClientData] = useState<ClientProfileResponse | null>(null);
+    const [purchases, setPurchases] = useState<Purchase[]>([]);
+    const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [activeHistoryTab, setActiveHistoryTab] = useState<'purchases' | 'rewards'>('purchases');
 
     useEffect(() => {
         let isMounted = true;
@@ -17,8 +20,16 @@ export default function ClientDashboard() {
         const fetchProfile = async () => {
             if (!user?.email) return;
             try {
-                const data = await getClientProfile(user.email);
-                if (isMounted) setClientData(data);
+                const [profile, purchaseList, rewardList] = await Promise.all([
+                    getClientProfile(user.email),
+                    getClientPurchases(user.email),
+                    getClientRewards(user.email),
+                ]);
+                if (isMounted) {
+                    setClientData(profile);
+                    setPurchases(purchaseList);
+                    setRewards(rewardList);
+                }
             } catch {
                 if (isMounted) setError('No pudimos cargar tu perfil.');
             } finally {
@@ -53,13 +64,12 @@ export default function ClientDashboard() {
     return (
         <div className="container" style={{ paddingBottom: '4rem' }}>
 
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-primary)' }}>Magic Club</h1>
-                <button onClick={logout} className="btn" style={{ border: '1px solid var(--color-border)' }}>Salir</button>
+            <div className="page-header">
+                <h1>Magic Club</h1>
+                <button onClick={logout} className="btn btn-outline">Salir</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+            <div className="flex-cards">
 
                 {/* Progress Card */}
                 <div className="card" style={{ flex: '1 1 300px' }}>
@@ -74,7 +84,7 @@ export default function ClientDashboard() {
                     </div>
 
                     {reward_available ? (
-                        <div style={{ padding: '1rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                        <div className="alert-success">
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
                             <p>Tienes en promedio <strong>${available_discount.toFixed(2)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
                         </div>
@@ -101,6 +111,78 @@ export default function ClientDashboard() {
                     </p>
                 </div>
 
+            </div>
+
+            {/* Purchase & Reward History */}
+            <div className="card" style={{ marginTop: '2rem' }}>
+                <div className="tab-nav">
+                    <button
+                        className={`tab-btn ${activeHistoryTab === 'purchases' ? 'active' : ''}`}
+                        onClick={() => setActiveHistoryTab('purchases')}
+                    >
+                        Compras ({purchases.length})
+                    </button>
+                    <button
+                        className={`tab-btn ${activeHistoryTab === 'rewards' ? 'active' : ''}`}
+                        onClick={() => setActiveHistoryTab('rewards')}
+                    >
+                        Premios ({rewards.length})
+                    </button>
+                </div>
+
+                {activeHistoryTab === 'purchases' ? (
+                    purchases.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no tienes compras registradas.</p>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {purchases.map((p) => (
+                                        <tr key={p.id}>
+                                            <td>{new Date(p.created_at).toLocaleDateString()}</td>
+                                            <td>${p.amount.toFixed(2)}</td>
+                                            <td>
+                                                <span className={`badge ${p.status === 'active' ? 'badge-active' : 'badge-used'}`}>
+                                                    {p.status === 'active' ? 'Activa' : 'Usada'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )
+                ) : (
+                    rewards.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no has canjeado premios.</p>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Descuento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rewards.map((r) => (
+                                        <tr key={r.id}>
+                                            <td>{new Date(r.created_at).toLocaleDateString()}</td>
+                                            <td>${r.amount_discounted.toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )
+                )}
             </div>
         </div>
     );

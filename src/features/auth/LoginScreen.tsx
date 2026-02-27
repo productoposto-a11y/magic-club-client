@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { setTokens } from '../../core/api/axios';
 import { useAuth } from '../../core/auth/AuthContext';
+import { parseJwt } from '../../core/auth/parseJwt';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { loginWithPassword as apiLoginWithPassword } from '../../core/auth/authService';
 import { requestMagicLink } from '../../core/auth/authService';
 import { registerClient } from '../../core/api/clientService';
 import { extractApiError } from '../../core/api/errors';
 
+const EMAIL_RX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
 export default function LoginScreen() {
     const { user, loginWithTokens } = useAuth();
     const navigate = useNavigate();
 
-    // States for Magic Link & Registration
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
     const [emailMagic, setEmailMagic] = useState('');
@@ -19,7 +21,6 @@ export default function LoginScreen() {
     const [successMagic, setSuccessMagic] = useState(false);
     const [errorMagic, setErrorMagic] = useState('');
 
-    // States for Registration
     const [regEmail, setRegEmail] = useState('');
     const [regPassword, setRegPassword] = useState('');
     const [regDni, setRegDni] = useState('');
@@ -27,33 +28,22 @@ export default function LoginScreen() {
     const [successReg, setSuccessReg] = useState('');
     const [errorReg, setErrorReg] = useState('');
 
-    // Client Password Login Toggle
     const [loginWithPasswordToggle, setLoginWithPasswordToggle] = useState(false);
     const [clientPassword, setClientPassword] = useState('');
 
-    // States for Password Login (Cashiers/Admin)
     const [emailPass, setEmailPass] = useState('');
     const [password, setPassword] = useState('');
     const [loadingPass, setLoadingPass] = useState(false);
     const [errorPass, setErrorPass] = useState('');
 
-    // Helper to parse JWT and login via AuthContext
     const processAuthResponse = (data: { authentication: { access_token: string; csrf_token: string } }, redirectTo: string) => {
         const accessToken = data.authentication.access_token;
         const csrfToken = data.authentication.csrf_token;
 
         setTokens(accessToken, csrfToken);
 
-        // Parse JWT to extract user claims
-        const base64Url = accessToken.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-        const decoded = JSON.parse(jsonPayload);
+        const decoded = parseJwt(accessToken);
+        if (!decoded) return;
 
         loginWithTokens(accessToken, csrfToken, {
             id: decoded.sub,
@@ -64,7 +54,6 @@ export default function LoginScreen() {
         navigate(redirectTo, { replace: true });
     };
 
-    // If already logged in, redirect to their panel automatically
     if (user) {
         if (user.role === 'admin') return <Navigate to="/admin" replace />;
         if (user.role === 'store_cashier') return <Navigate to="/store" replace />;
@@ -73,13 +62,22 @@ export default function LoginScreen() {
 
     const handleMagicLink = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoadingMagic(true);
         setErrorMagic('');
+
+        if (!EMAIL_RX.test(emailMagic)) {
+            setErrorMagic('Ingresa un correo electrónico válido.');
+            return;
+        }
+        if (loginWithPasswordToggle && clientPassword.length < 8) {
+            setErrorMagic('La contraseña debe tener al menos 8 caracteres.');
+            return;
+        }
+
+        setLoadingMagic(true);
         setSuccessMagic(false);
 
         try {
             if (loginWithPasswordToggle) {
-                // Client logging in with password
                 const data = await apiLoginWithPassword(emailMagic, clientPassword);
                 processAuthResponse(data, '/client');
             } else {
@@ -95,8 +93,22 @@ export default function LoginScreen() {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoadingReg(true);
         setErrorReg('');
+
+        if (!EMAIL_RX.test(regEmail)) {
+            setErrorReg('Ingresa un correo electrónico válido.');
+            return;
+        }
+        if (regPassword && regPassword.length < 8) {
+            setErrorReg('La contraseña debe tener al menos 8 caracteres.');
+            return;
+        }
+        if (regDni && !/^\d+$/.test(regDni)) {
+            setErrorReg('El DNI debe contener solo números.');
+            return;
+        }
+
+        setLoadingReg(true);
         setSuccessReg('');
 
         try {
@@ -114,8 +126,18 @@ export default function LoginScreen() {
 
     const handlePasswordLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoadingPass(true);
         setErrorPass('');
+
+        if (!EMAIL_RX.test(emailPass)) {
+            setErrorPass('Ingresa un correo electrónico válido.');
+            return;
+        }
+        if (password.length < 8) {
+            setErrorPass('La contraseña debe tener al menos 8 caracteres.');
+            return;
+        }
+
+        setLoadingPass(true);
 
         try {
             const data = await apiLoginWithPassword(emailPass, password);
@@ -135,21 +157,21 @@ export default function LoginScreen() {
                 <p style={{ color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>El programa de lealtad oficial</p>
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
+            <div className="flex-cards" style={{ justifyContent: 'center', width: '100%' }}>
 
                 {/* Magic Link / Register (Clients) */}
                 <div className="card" style={{ width: '100%', maxWidth: '400px' }}>
 
-                    <div style={{ display: 'flex', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
+                    <div className="tab-nav">
                         <button
                             onClick={() => setActiveTab('login')}
-                            style={{ flex: 1, padding: '0.5rem', background: 'none', border: 'none', borderBottom: activeTab === 'login' ? '2px solid var(--color-primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: activeTab === 'login' ? 700 : 400 }}
+                            className={`tab-btn ${activeTab === 'login' ? 'active' : ''}`}
                         >
                             Ingreso
                         </button>
                         <button
                             onClick={() => setActiveTab('register')}
-                            style={{ flex: 1, padding: '0.5rem', background: 'none', border: 'none', borderBottom: activeTab === 'register' ? '2px solid var(--color-primary)' : '2px solid transparent', cursor: 'pointer', fontWeight: activeTab === 'register' ? 700 : 400 }}
+                            className={`tab-btn ${activeTab === 'register' ? 'active' : ''}`}
                         >
                             Registro
                         </button>
@@ -157,7 +179,7 @@ export default function LoginScreen() {
 
                     {activeTab === 'login' ? (
                         successMagic ? (
-                            <div style={{ padding: '1rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '8px', marginBottom: '1rem' }}>
+                            <div className="alert-success">
                                 <strong>¡Enlace enviado!</strong> Revisa tu correo electrónico para iniciar sesión de forma segura.
                             </div>
                         ) : (
@@ -180,7 +202,7 @@ export default function LoginScreen() {
                                         <input
                                             type="password"
                                             className="input-field"
-                                            placeholder="••••••••"
+                                            placeholder="Mínimo 8 caracteres"
                                             value={clientPassword}
                                             onChange={(e) => setClientPassword(e.target.value)}
                                             required
@@ -188,7 +210,7 @@ export default function LoginScreen() {
                                     </div>
                                 )}
 
-                                {errorMagic && <p style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginBottom: '1rem' }}>{errorMagic}</p>}
+                                {errorMagic && <p className="input-error" style={{ marginBottom: '1rem' }}>{errorMagic}</p>}
 
                                 <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loadingMagic}>
                                     {loadingMagic ? 'Procesando...' : (loginWithPasswordToggle ? 'Iniciar Sesión' : 'Recibir Enlace Mágico')}
@@ -207,11 +229,7 @@ export default function LoginScreen() {
                         )
                     ) : (
                         <form onSubmit={handleRegister}>
-                            {successReg && (
-                                <div style={{ padding: '1rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '8px', marginBottom: '1rem' }}>
-                                    {successReg}
-                                </div>
-                            )}
+                            {successReg && <div className="alert-success">{successReg}</div>}
 
                             <div className="input-group">
                                 <label className="input-label">Correo Electrónico</label>
@@ -247,7 +265,7 @@ export default function LoginScreen() {
                                 />
                             </div>
 
-                            {errorReg && <p style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginBottom: '1rem' }}>{errorReg}</p>}
+                            {errorReg && <p className="input-error" style={{ marginBottom: '1rem' }}>{errorReg}</p>}
 
                             <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loadingReg}>
                                 {loadingReg ? 'Creando...' : 'Crear Cuenta'}
@@ -278,14 +296,14 @@ export default function LoginScreen() {
                             <input
                                 type="password"
                                 className="input-field"
-                                placeholder="••••••••"
+                                placeholder="Mínimo 8 caracteres"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
                         </div>
 
-                        {errorPass && <p style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginBottom: '1rem' }}>{errorPass}</p>}
+                        {errorPass && <p className="input-error" style={{ marginBottom: '1rem' }}>{errorPass}</p>}
 
                         <button type="submit" className="btn btn-primary" style={{ width: '100%', backgroundColor: 'var(--color-text)' }} disabled={loadingPass}>
                             {loadingPass ? 'Iniciando...' : 'Acceder (Password)'}
