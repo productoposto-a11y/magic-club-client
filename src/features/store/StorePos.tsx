@@ -21,7 +21,8 @@ export default function StorePos() {
     const [clientData, setClientData] = useState<ClientProfileResponse | null>(null);
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [searchError, setSearchError] = useState('');
-    const [purchaseAmount, setPurchaseAmount] = useState<number | ''>('');
+    const [purchaseAmount, setPurchaseAmount] = useState('');
+    const [dataVersion, setDataVersion] = useState(0);
     const [loadingTx, setLoadingTx] = useState(false);
     const [txSuccess, setTxSuccess] = useState('');
     const [txError, setTxError] = useState('');
@@ -41,6 +42,17 @@ export default function StorePos() {
     const [loadingStats, setLoadingStats] = useState(false);
 
     const STORE_ID = '00000000-0000-0000-0000-000000000000';
+
+    // Format number with dots as thousands separator (Argentine style)
+    const formatPrice = (value: string): string => {
+        const digits = value.replace(/\D/g, '');
+        if (!digits) return '';
+        return Number(digits).toLocaleString('es-AR');
+    };
+
+    const rawAmount = (): number => {
+        return Number(purchaseAmount.replace(/\D/g, '')) || 0;
+    };
 
     // === SCAN TAB LOGIC ===
     const fetchClient = async (identifier: string) => {
@@ -70,8 +82,8 @@ export default function StorePos() {
 
     const validateAmount = (): boolean => {
         setAmountError('');
-        const amount = Number(purchaseAmount);
-        if (!purchaseAmount || amount <= 0) {
+        const amount = rawAmount();
+        if (!amount || amount <= 0) {
             setAmountError('Ingrese un monto mayor a 0.');
             return false;
         }
@@ -87,7 +99,7 @@ export default function StorePos() {
             if (!validateAmount()) return;
             setConfirmAction({
                 type: 'purchase',
-                message: `¿Registrar compra de $${Number(purchaseAmount).toFixed(2)}?`,
+                message: `¿Registrar compra de $${rawAmount().toLocaleString('es-AR')}?`,
             });
         } else {
             if (!clientData) return;
@@ -111,14 +123,16 @@ export default function StorePos() {
                 await redeemReward(clientData.client.id, STORE_ID, clientData.status.available_discount);
                 successMsg = `¡Premio canjeado! Descuento aplicado: $${clientData.status.available_discount.toFixed(2)}`;
             } else {
-                await createPurchase(clientData.client.id, STORE_ID, Number(purchaseAmount));
-                successMsg = `¡Compra de $${Number(purchaseAmount).toFixed(2)} registrada exitosamente!`;
+                const amount = rawAmount();
+                await createPurchase(clientData.client.id, STORE_ID, amount);
+                successMsg = `¡Compra de $${amount.toLocaleString('es-AR')} registrada exitosamente!`;
                 setPurchaseAmount('');
             }
 
-            // Close client modal and show success as toast-like message
+            // Close client modal, show success, and invalidate cached tab data
             setClientData(null);
             setLastTxSuccess(successMsg);
+            setDataVersion(v => v + 1);
         } catch (err: any) {
             setTxError(extractApiError(err, err.message || 'Error procesando la transacción.'));
         } finally {
@@ -167,14 +181,14 @@ export default function StorePos() {
         }
     };
 
-    // Fetch data when switching tabs
+    // Fetch data when switching tabs or after a transaction
     useEffect(() => {
         if (activeTab === 'purchases') {
             fetchStorePurchases(1);
         } else if (activeTab === 'dashboard') {
             fetchStats();
         }
-    }, [activeTab]);
+    }, [activeTab, dataVersion]);
 
     return (
         <div className="container" style={{ paddingBottom: '4rem' }}>
@@ -250,12 +264,12 @@ export default function StorePos() {
 
             {/* Client Transaction Modal */}
             {clientData && (
-                <div className="modal-overlay" onClick={() => { setClientData(null); setTxSuccess(''); setTxError(''); setPurchaseAmount(''); }}>
+                <div className="modal-overlay" onClick={() => { setClientData(null); setTxSuccess(''); setTxError(''); setPurchaseAmount(''); setAmountError(''); }}>
                     <div className="modal" style={{ maxWidth: '480px', width: '95%' }} onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Gestión de Venta</h3>
                             <button
-                                onClick={() => { setClientData(null); setTxSuccess(''); setTxError(''); setPurchaseAmount(''); }}
+                                onClick={() => { setClientData(null); setTxSuccess(''); setTxError(''); setPurchaseAmount(''); setAmountError(''); }}
                                 style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--color-text-muted)', lineHeight: 1 }}
                             >
                                 &times;
@@ -285,15 +299,16 @@ export default function StorePos() {
                                 <div className="input-group">
                                     <label className="input-label">Monto de Carga ($)</label>
                                     <input
-                                        type="number"
+                                        type="text"
+                                        inputMode="numeric"
                                         className="input-field"
-                                        placeholder="Ej. 15000"
+                                        placeholder="Ej. 15.000"
                                         value={purchaseAmount}
                                         onChange={(e) => {
-                                            setPurchaseAmount(Number(e.target.value) || '');
+                                            setPurchaseAmount(formatPrice(e.target.value));
                                             setAmountError('');
                                         }}
-                                        min="1"
+                                        style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '1px' }}
                                     />
                                     {amountError && <p className="input-error">{amountError}</p>}
                                 </div>
