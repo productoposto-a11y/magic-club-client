@@ -6,11 +6,12 @@ export async function getClientProfile(identifier: string): Promise<ClientProfil
   return res.data;
 }
 
-export async function createPurchase(clientId: string, storeId: string, amount: number): Promise<Purchase> {
+export async function createPurchase(clientId: string, storeId: string, amount: number, excludeFromPromo = false): Promise<Purchase> {
   const res = await apiClient.post('/purchases', {
     client_id: clientId,
     store_id: storeId,
     amount,
+    exclude_from_promo: excludeFromPromo,
   });
   return res.data.purchase;
 }

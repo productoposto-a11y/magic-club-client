@@ -69,6 +69,9 @@ export default function ClientDashboard() {
         } else if (event.type === 'reward_redeemed') {
             const amount = event.data.amount_discounted as number;
             toast.success(`Premio canjeado: ${fmtPrice(amount)} de descuento`);
+        } else if (event.type === 'purchase_voided') {
+            const amount = event.data.amount as number;
+            toast.error(`Compra de ${fmtPrice(amount)} anulada`);
         }
         fetchAllData();
     }, [fetchAllData]);
@@ -267,7 +270,7 @@ export default function ClientDashboard() {
                     {reward_available ? (
                         <div className="alert-success">
                             <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
-                            <p style={{ fontSize: '0.9rem' }}>Tienes en promedio <strong>{fmtPrice(available_discount)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
+                            <p style={{ fontSize: '0.9rem', wordBreak: 'break-word' }}>Tienes en promedio <strong>{fmtPrice(available_discount)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
                         </div>
                     ) : (
                         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>

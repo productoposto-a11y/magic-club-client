@@ -131,8 +131,9 @@ export default function StorePos() {
         const amount = rawAmount();
 
         try {
-            // Always create the purchase first
-            await createPurchase(clientData.client.id, STORE_ID, amount);
+            // Create the purchase — exclude from promo if redeeming reward simultaneously
+            const excludeFromPromo = type === 'purchase_and_redeem';
+            await createPurchase(clientData.client.id, STORE_ID, amount, excludeFromPromo);
 
             if (type === 'purchase_and_redeem') {
                 // Then redeem the reward
@@ -332,7 +333,7 @@ export default function StorePos() {
                             </div>
 
                             {clientData.status.reward_available && purchaseAmount && (
-                                <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                                <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', marginBottom: '1rem', fontSize: 'clamp(0.8rem, 3.5vw, 0.9rem)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                                         <span>Compra</span>
                                         <span>{fmtPrice(rawAmount())}</span>
@@ -342,7 +343,7 @@ export default function StorePos() {
                                         <span>-{fmtPrice(clientData.status.available_discount)}</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                                        <span>Total a cobrar</span>
+                                        <span>A cobrar</span>
                                         <span>{fmtPrice(Math.max(0, rawAmount() - clientData.status.available_discount))}</span>
                                     </div>
                                 </div>
@@ -379,15 +380,15 @@ export default function StorePos() {
                         <h3 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Resumen de Operación</h3>
 
                         <div style={{ padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', marginBottom: '1.5rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '1rem' }}>
-                                <span>Compra registrada</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: 'clamp(0.85rem, 3.5vw, 1rem)' }}>
+                                <span>Compra</span>
                                 <span style={{ fontWeight: 600 }}>{fmtPrice(txSummary.purchaseAmount)}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '1rem', color: 'var(--color-secondary)' }}>
-                                <span>Descuento aplicado</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: 'clamp(0.85rem, 3.5vw, 1rem)', color: 'var(--color-secondary)' }}>
+                                <span>Descuento</span>
                                 <span style={{ fontWeight: 600 }}>-{fmtPrice(txSummary.discountAmount)}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: 700, borderTop: '2px solid var(--color-border)', paddingTop: '0.75rem', marginTop: '0.25rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'clamp(0.9rem, 4vw, 1.15rem)', fontWeight: 700, borderTop: '2px solid var(--color-border)', paddingTop: '0.75rem', marginTop: '0.25rem' }}>
                                 <span>Total cobrado</span>
                                 <span style={{ color: 'var(--color-success)' }}>{fmtPrice(txSummary.netAmount)}</span>
                             </div>
@@ -467,13 +468,13 @@ export default function StorePos() {
 
                             {/* Summary */}
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)' }}>
-                                <div style={{ flex: '1 1 120px' }}>
+                                <div style={{ flex: '1 1 120px', minWidth: 0 }}>
                                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Total Facturado</span>
-                                    <p style={{ fontWeight: 700, fontSize: '1rem' }}>{fmtPrice(purchaseSummary.total_amount)}</p>
+                                    <p style={{ fontWeight: 700, fontSize: 'clamp(0.85rem, 3.5vw, 1rem)', wordBreak: 'break-word' }}>{fmtPrice(purchaseSummary.total_amount)}</p>
                                 </div>
-                                <div style={{ flex: '1 1 120px' }}>
+                                <div style={{ flex: '1 1 120px', minWidth: 0 }}>
                                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Total Descontado</span>
-                                    <p style={{ fontWeight: 700, fontSize: '1rem' }}>{fmtPrice(purchaseSummary.total_discount)}</p>
+                                    <p style={{ fontWeight: 700, fontSize: 'clamp(0.85rem, 3.5vw, 1rem)', wordBreak: 'break-word' }}>{fmtPrice(purchaseSummary.total_discount)}</p>
                                 </div>
                             </div>
 
@@ -517,21 +518,21 @@ export default function StorePos() {
                         </div>
                     ) : stats ? (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem', overflow: 'hidden' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Compras</p>
-                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{stats.total_purchases}</p>
+                                <p style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 800, color: 'var(--color-primary)' }}>{stats.total_purchases}</p>
                             </div>
-                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem', overflow: 'hidden' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Facturado</p>
-                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{fmtPrice(stats.total_billed)}</p>
+                                <p style={{ fontSize: 'clamp(0.85rem, 3.5vw, 1.5rem)', fontWeight: 800, color: 'var(--color-primary)', wordBreak: 'break-word' }}>{fmtPrice(stats.total_billed)}</p>
                             </div>
-                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem', overflow: 'hidden' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Descontado</p>
-                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-secondary)' }}>{fmtPrice(stats.total_discounted)}</p>
+                                <p style={{ fontSize: 'clamp(0.85rem, 3.5vw, 1.5rem)', fontWeight: 800, color: 'var(--color-secondary)', wordBreak: 'break-word' }}>{fmtPrice(stats.total_discounted)}</p>
                             </div>
-                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem', overflow: 'hidden' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Neto</p>
-                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-success)' }}>{fmtPrice(stats.total_net)}</p>
+                                <p style={{ fontSize: 'clamp(0.85rem, 3.5vw, 1.5rem)', fontWeight: 800, color: 'var(--color-success)', wordBreak: 'break-word' }}>{fmtPrice(stats.total_net)}</p>
                             </div>
                         </div>
                     ) : (
