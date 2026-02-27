@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getClientProfile, createPurchase, redeemReward } from '../../core/api/clientService';
-import { getStoreStats, getStorePurchases } from '../../core/api/storeService';
+import { getStoreStats, getStorePurchases, voidPurchase } from '../../core/api/storeService';
 import { extractApiError } from '../../core/api/errors';
 import type { ClientProfileResponse, StoreStats, StorePurchaseItem } from '../../core/types/api';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
@@ -34,6 +34,7 @@ export default function StorePos() {
     const [purchaseSummary, setPurchaseSummary] = useState({ total_amount: 0, total_discount: 0 });
     const [purchaseMeta, setPurchaseMeta] = useState({ current_page: 1, page_size: 20, total_records: 0 });
     const [loadingPurchases, setLoadingPurchases] = useState(false);
+    const [voidingId, setVoidingId] = useState<string | null>(null);
 
     // === DASHBOARD TAB STATE ===
     const [stats, setStats] = useState<StoreStats | null>(null);
@@ -137,6 +138,19 @@ export default function StorePos() {
             // Silent fail
         } finally {
             setLoadingPurchases(false);
+        }
+    };
+
+    const handleVoidPurchase = async (purchaseId: string) => {
+        if (!confirm('¿Invalidar esta compra? Esta acción no se puede deshacer.')) return;
+        setVoidingId(purchaseId);
+        try {
+            await voidPurchase(purchaseId);
+            fetchStorePurchases(purchaseMeta.current_page);
+        } catch {
+            alert('Error al invalidar la compra.');
+        } finally {
+            setVoidingId(null);
         }
     };
 
@@ -315,20 +329,33 @@ export default function StorePos() {
                                             <th>DNI</th>
                                             <th>Monto</th>
                                             <th>Estado</th>
+                                            <th></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {storePurchases.map((p) => (
-                                            <tr key={p.id}>
+                                            <tr key={p.id} style={p.status === 'voided' ? { opacity: 0.5 } : undefined}>
                                                 <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
                                                 <td>{new Date(p.created_at).toLocaleDateString()}</td>
                                                 <td style={{ fontSize: '0.85rem' }}>{p.client_email}</td>
                                                 <td>{p.client_dni}</td>
-                                                <td>${p.amount.toFixed(2)}</td>
+                                                <td>{p.status === 'voided' ? <s>${p.amount.toFixed(2)}</s> : `$${p.amount.toFixed(2)}`}</td>
                                                 <td>
-                                                    <span className={`badge ${p.status === 'active' ? 'badge-active' : 'badge-used'}`}>
-                                                        {p.status === 'active' ? 'Activa' : 'Usada'}
+                                                    <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
+                                                        {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    {p.status === 'active' && (
+                                                        <button
+                                                            className="btn btn-outline"
+                                                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: 'var(--color-danger)' }}
+                                                            onClick={() => handleVoidPurchase(p.id)}
+                                                            disabled={voidingId === p.id}
+                                                        >
+                                                            {voidingId === p.id ? '...' : 'Anular'}
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

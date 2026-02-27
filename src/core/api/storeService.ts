@@ -12,3 +12,7 @@ export async function getStorePurchases(page: number = 1, pageSize: number = 20)
   });
   return res.data;
 }
+
+export async function voidPurchase(purchaseId: string): Promise<void> {
+  await apiClient.patch(`/purchases/${purchaseId}/void`);
+}

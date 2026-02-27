@@ -152,8 +152,8 @@ export default function ClientDashboard() {
                                             <td>{new Date(p.created_at).toLocaleDateString()}</td>
                                             <td>${p.amount.toFixed(2)}</td>
                                             <td>
-                                                <span className={`badge ${p.status === 'active' ? 'badge-active' : 'badge-used'}`}>
-                                                    {p.status === 'active' ? 'Activa' : 'Usada'}
+                                                <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
+                                                    {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
                                                 </span>
                                             </td>
                                         </tr>

@@ -318,6 +318,11 @@ body {
   color: #475569 !important;
 }
 
+.badge-voided {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;

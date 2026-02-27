@@ -31,7 +31,7 @@ export interface Purchase {
   client_id: string;
   store_id: string;
   amount: number;
-  status: 'active' | 'used';
+  status: 'active' | 'used' | 'voided';
   created_at: string;
 }
 
@@ -82,7 +82,7 @@ export interface StorePurchaseItem {
   client_email: string;
   client_dni: string;
   amount: number;
-  status: 'active' | 'used';
+  status: 'active' | 'used' | 'voided';
   created_at: string;
 }
 
