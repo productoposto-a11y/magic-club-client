@@ -1,32 +1,48 @@
-/* 
- * Magic Club Loyalty System - Vanilla CSS Base 
+/*
+ * Magic Club Loyalty System - Vanilla CSS Base
  * Modern, Minimalist, Responsive
+ *
+ * All color properties use !important to prevent dark-mode browser
+ * extensions (Dark Reader, Night Eye, etc.) from overriding them.
  */
 
 :root {
-  color-scheme: light only;
+  color-scheme: light only !important;
 
   /* Color Palette */
-  --color-primary: #6366f1; /* Indigo 500 */
-  --color-primary-hover: #4f46e5;
-  --color-secondary: #ec4899; /* Pink 500 */
-  --color-success: #10b981; /* Emerald 500 */
-  --color-danger: #ef4444; /* Red 500 */
-  
-  --color-bg: #f8fafc; /* Slate 50 */
-  --color-surface: #ffffff;
-  --color-text: #0f172a; /* Slate 900 */
-  --color-text-muted: #64748b; /* Slate 500 */
-  --color-border: #e2e8f0; /* Slate 200 */
+  --color-primary: #6366f1 !important; /* Indigo 500 */
+  --color-primary-hover: #4f46e5 !important;
+  --color-secondary: #ec4899 !important; /* Pink 500 */
+  --color-success: #10b981 !important; /* Emerald 500 */
+  --color-danger: #ef4444 !important; /* Red 500 */
+
+  --color-bg: #f8fafc !important; /* Slate 50 */
+  --color-surface: #ffffff !important;
+  --color-text: #0f172a !important; /* Slate 900 */
+  --color-text-muted: #64748b !important; /* Slate 500 */
+  --color-border: #e2e8f0 !important; /* Slate 200 */
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  
+
   /* Layout & Spacing */
   --border-radius: 12px;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/*
+ * Anti-dark-mode shield: block filter-based and injection-based extensions.
+ * Extensions like Dark Reader apply filter:invert() on <html> — we force none.
+ * The background-image trick with a 1x1 transparent PNG prevents extensions
+ * that avoid modifying elements with background-image from touching these.
+ */
+html {
+  filter: none !important;
+  -webkit-filter: none !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 /* Base Reset */
@@ -38,8 +54,8 @@
 
 body {
   font-family: var(--font-family);
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -57,6 +73,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: #f8fafc !important;
 }
 
 .main-content {
@@ -66,11 +83,12 @@ body {
 
 /* UI Components */
 .card {
-  background-color: var(--color-surface);
+  background-color: #ffffff !important;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-md);
   padding: 1.5rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 .btn {
@@ -88,17 +106,17 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: #6366f1 !important;
+  color: #ffffff !important;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
+  background-color: #4f46e5 !important;
 }
 
 .btn-success {
-  background-color: var(--color-success);
-  color: white;
+  background-color: #10b981 !important;
+  color: #ffffff !important;
 }
 
 .btn-success:hover {
@@ -113,28 +131,30 @@ body {
   display: block;
   font-weight: 500;
   margin-bottom: 0.5rem;
-  color: var(--color-text);
+  color: #0f172a !important;
 }
 
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid #e2e8f0 !important;
   border-radius: var(--border-radius);
   font-size: 1rem;
   transition: border-color 0.2s;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 .input-field:focus {
-  border-color: var(--color-primary);
+  border-color: #6366f1 !important;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
 }
 
 /* Button Variants */
 .btn-danger {
-  background-color: var(--color-danger);
-  color: white;
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
 }
 
 .btn-danger:hover {
@@ -142,13 +162,13 @@ body {
 }
 
 .btn-outline {
-  background-color: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background-color: transparent !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 .btn-outline:hover {
-  background-color: var(--color-bg);
+  background-color: #f8fafc !important;
 }
 
 .btn:disabled {
@@ -168,7 +188,7 @@ body {
 .page-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #6366f1 !important;
 }
 
 /* Flex Cards Layout */
@@ -181,41 +201,41 @@ body {
 /* Alerts */
 .alert-success {
   padding: 1rem;
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
   border-radius: 8px;
   margin-bottom: 1rem;
-  border: 1px solid #bbf7d0;
+  border: 1px solid #bbf7d0 !important;
 }
 
 .alert-error {
   padding: 1rem;
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
   border-radius: 8px;
   margin-bottom: 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid #fecaca !important;
 }
 
 .alert-info {
   padding: 1rem;
-  background-color: #eff6ff;
-  color: #1d4ed8;
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
   border-radius: 8px;
   margin-bottom: 1rem;
-  border: 1px solid #bfdbfe;
+  border: 1px solid #bfdbfe !important;
 }
 
 /* Stat Card */
 .stat-card {
   padding: 1.5rem;
-  background-color: var(--color-bg);
+  background-color: #f8fafc !important;
   border-radius: var(--border-radius);
-  border: 1px solid var(--color-border);
+  border: 1px solid #e2e8f0 !important;
 }
 
 .stat-card .stat-label {
-  color: var(--color-text-muted);
+  color: #64748b !important;
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -231,26 +251,26 @@ body {
 .tab-nav {
   display: flex;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
 .tab-btn {
   flex: 1;
   padding: 0.75rem 0.5rem;
-  background: none;
+  background: none !important;
   border: none;
   border-bottom: 2px solid transparent;
   cursor: pointer;
   font-weight: 400;
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: #64748b !important;
   transition: all 0.2s;
 }
 
 .tab-btn.active {
-  border-bottom-color: var(--color-primary);
+  border-bottom-color: #6366f1 !important;
   font-weight: 700;
-  color: var(--color-text);
+  color: #0f172a !important;
 }
 
 /* Table */
@@ -264,18 +284,19 @@ body {
 .table td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 .table th {
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: #64748b !important;
   text-transform: uppercase;
   font-size: 0.8rem;
 }
 
 .table tbody tr:hover {
-  background-color: var(--color-bg);
+  background-color: #f8fafc !important;
 }
 
 /* Badge */
@@ -288,13 +309,13 @@ body {
 }
 
 .badge-active {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
 }
 
 .badge-used {
-  background-color: #e2e8f0;
-  color: #475569;
+  background-color: #e2e8f0 !important;
+  color: #475569 !important;
 }
 
 /* Modal */
@@ -304,7 +325,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -312,12 +333,13 @@ body {
 }
 
 .modal {
-  background-color: var(--color-surface);
+  background-color: #ffffff !important;
   border-radius: var(--border-radius);
   padding: 2rem;
   max-width: 420px;
   width: 90%;
   box-shadow: var(--shadow-lg);
+  color: #0f172a !important;
 }
 
 .modal h3 {
@@ -336,7 +358,7 @@ body {
 
 /* Inline validation error */
 .input-error {
-  color: var(--color-danger);
+  color: #ef4444 !important;
   font-size: 0.8rem;
   margin-top: 0.25rem;
 }
@@ -357,13 +379,14 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  background-color: #f8fafc !important;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--color-border);
-  border-top-color: var(--color-primary);
+  border: 4px solid #e2e8f0 !important;
+  border-top-color: #6366f1 !important;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
