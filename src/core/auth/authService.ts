@@ -6,12 +6,8 @@ export async function loginWithPassword(email: string, password: string): Promis
   return res.data;
 }
 
-export async function requestMagicLink(email: string): Promise<void> {
-  await apiClient.post('/users/magic-link', { email });
-}
-
-export async function authenticateMagicLink(token: string): Promise<AuthTokens> {
-  const res = await apiClient.post('/users/magic-link/authenticate', { token });
+export async function loginWithDNI(dni: string, password: string): Promise<AuthTokens> {
+  const res = await apiClient.post('/tokens/authentication', { dni, password });
   return res.data;
 }
 

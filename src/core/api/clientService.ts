@@ -24,11 +24,11 @@ export async function redeemReward(clientId: string, storeId: string, amountDisc
   return res.data.reward;
 }
 
-export async function registerClient(email: string, password?: string, dni?: string): Promise<{ client: ClientProfileResponse['client'] }> {
+export async function registerClient(email: string, password: string, dni: string): Promise<{ client: ClientProfileResponse['client'] }> {
   const res = await apiClient.post('/clients', {
     email,
-    password: password || undefined,
-    dni: dni || undefined,
+    password,
+    dni,
   });
   return res.data;
 }

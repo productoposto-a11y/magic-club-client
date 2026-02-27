@@ -14,7 +14,7 @@ export default function ClientDashboard() {
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [activeHistoryTab, setActiveHistoryTab] = useState<'purchases' | 'rewards'>('purchases');
+    const [activeTab, setActiveTab] = useState<'purchases' | 'qr' | 'promo'>('purchases');
 
     const fetchAllData = useCallback(async () => {
         if (!user?.email) return;
@@ -28,7 +28,7 @@ export default function ClientDashboard() {
             setPurchases(purchaseList);
             setRewards(rewardList);
         } catch {
-            // Silently fail on refresh — initial error is already shown
+            // Silently fail on refresh
         }
     }, [user?.email]);
 
@@ -103,69 +103,35 @@ export default function ClientDashboard() {
                 <button onClick={logout} className="btn btn-outline">Salir</button>
             </div>
 
-            <div className="flex-cards">
-
-                {/* Progress Card */}
-                <div className="card" style={{ flex: '1 1 300px' }}>
-                    <h2 style={{ marginBottom: '1.5rem' }}>Tu Progreso</h2>
-
-                    <div style={{ padding: '2rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', textAlign: 'center', marginBottom: '1.5rem' }}>
-                        <span style={{ fontSize: '4rem', fontWeight: 800, color: reward_available ? 'var(--color-success)' : 'var(--color-primary)' }}>
-                            {active_purchases_count}
-                        </span>
-                        <span style={{ fontSize: '2rem', color: 'var(--color-text-muted)' }}>/ 5</span>
-                        <p style={{ marginTop: '0.5rem', fontWeight: 500 }}>compras registradas</p>
-                    </div>
-
-                    {reward_available ? (
-                        <div className="alert-success">
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
-                            <p>Tienes en promedio <strong>${available_discount.toFixed(2)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
-                        </div>
-                    ) : (
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
-                            Te faltan {5 - active_purchases_count} compras para conseguir tu próximo descuento.
-                        </p>
-                    )}
-                </div>
-
-                {/* QR Code Card */}
-                <div className="card" style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left' }}>Tu Pase Mágico</h2>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '2rem', width: '100%', textAlign: 'left' }}>
-                        Muestra este código en caja para sumar compras o canjear tus premios.
-                    </p>
-
-                    <div style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px' }}>
-                        <QRCode value={client.qr_code || ''} size={200} />
-                    </div>
-
-                    <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)' }}>
-                        {(client.qr_code || '').toUpperCase()}
-                    </p>
-                </div>
-
-            </div>
-
-            {/* Purchase & Reward History */}
-            <div className="card" style={{ marginTop: '2rem' }}>
+            {/* Tab Navigation */}
+            <div className="card" style={{ marginBottom: '1.5rem' }}>
                 <div className="tab-nav">
                     <button
-                        className={`tab-btn ${activeHistoryTab === 'purchases' ? 'active' : ''}`}
-                        onClick={() => setActiveHistoryTab('purchases')}
+                        className={`tab-btn ${activeTab === 'purchases' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('purchases')}
                     >
-                        Compras ({purchases.length})
+                        Mis Compras
                     </button>
                     <button
-                        className={`tab-btn ${activeHistoryTab === 'rewards' ? 'active' : ''}`}
-                        onClick={() => setActiveHistoryTab('rewards')}
+                        className={`tab-btn ${activeTab === 'qr' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('qr')}
                     >
-                        Premios ({rewards.length})
+                        Mi QR
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'promo' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('promo')}
+                    >
+                        Mi Promoción
                     </button>
                 </div>
+            </div>
 
-                {activeHistoryTab === 'purchases' ? (
-                    purchases.length === 0 ? (
+            {/* Tab Content */}
+            {activeTab === 'purchases' && (
+                <div className="card">
+                    <h2 style={{ marginBottom: '1.5rem' }}>Mis Compras</h2>
+                    {purchases.length === 0 ? (
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no tienes compras registradas.</p>
                     ) : (
                         <div style={{ overflowX: 'auto' }}>
@@ -192,32 +158,81 @@ export default function ClientDashboard() {
                                 </tbody>
                             </table>
                         </div>
-                    )
-                ) : (
-                    rewards.length === 0 ? (
-                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no has canjeado premios.</p>
-                    ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Descuento</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rewards.map((r) => (
-                                        <tr key={r.id}>
-                                            <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                                            <td>${r.amount_discounted.toFixed(2)}</td>
+                    )}
+
+                    {rewards.length > 0 && (
+                        <>
+                            <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Premios Canjeados</h3>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Descuento</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {rewards.map((r) => (
+                                            <tr key={r.id}>
+                                                <td>{new Date(r.created_at).toLocaleDateString()}</td>
+                                                <td>${r.amount_discounted.toFixed(2)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'qr' && (
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left' }}>Tu Pase Mágico</h2>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '2rem', width: '100%', textAlign: 'left' }}>
+                        Muestra este código en caja para sumar compras o canjear tus premios.
+                    </p>
+
+                    <div style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px' }}>
+                        <QRCode value={client.qr_code || ''} size={220} />
+                    </div>
+
+                    <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                        {(client.qr_code || '').toUpperCase()}
+                    </p>
+
+                    {client.dni && (
+                        <p style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                            DNI: {client.dni}
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'promo' && (
+                <div className="card">
+                    <h2 style={{ marginBottom: '1.5rem' }}>Mi Promoción</h2>
+
+                    <div style={{ padding: '2rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', textAlign: 'center', marginBottom: '1.5rem' }}>
+                        <span style={{ fontSize: '4rem', fontWeight: 800, color: reward_available ? 'var(--color-success)' : 'var(--color-primary)' }}>
+                            {active_purchases_count}
+                        </span>
+                        <span style={{ fontSize: '2rem', color: 'var(--color-text-muted)' }}>/ 5</span>
+                        <p style={{ marginTop: '0.5rem', fontWeight: 500 }}>compras registradas</p>
+                    </div>
+
+                    {reward_available ? (
+                        <div className="alert-success">
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
+                            <p>Tienes en promedio <strong>${available_discount.toFixed(2)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
                         </div>
-                    )
-                )}
-            </div>
+                    ) : (
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', textAlign: 'center' }}>
+                            Te faltan <strong>{5 - active_purchases_count}</strong> compras para conseguir tu próximo descuento.
+                        </p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

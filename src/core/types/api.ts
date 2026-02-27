@@ -67,3 +67,32 @@ export interface PaginatedClients {
     total_records: number;
   };
 }
+
+export interface StoreStats {
+  total_purchases: number;
+  total_billed: number;
+  total_discounted: number;
+  total_net: number;
+}
+
+export interface StorePurchaseItem {
+  id: string;
+  client_email: string;
+  client_dni: string;
+  amount: number;
+  status: 'active' | 'used';
+  created_at: string;
+}
+
+export interface StorePurchasesResponse {
+  purchases: StorePurchaseItem[];
+  summary: {
+    total_amount: number;
+    total_discount: number;
+  };
+  metadata: {
+    current_page: number;
+    page_size: number;
+    total_records: number;
+  };
+}

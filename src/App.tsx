@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './core/auth/AuthContext';
 import LoginScreen from './features/auth/LoginScreen';
-import MagicLinkCallback from './features/auth/MagicLinkCallback';
+import StoreLoginScreen from './features/auth/StoreLoginScreen';
 
 // Simple Loader Component
 const GlobalLoader = () => (
@@ -36,12 +36,11 @@ function App() {
   return (
     <BrowserRouter>
       <div className="app-layout">
-        {/* We can add a global Navbar here later if needed */}
         <main className="main-content">
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginScreen />} />
-            <Route path="/auth/callback" element={<MagicLinkCallback />} />
+            <Route path="/login/sucursal" element={<StoreLoginScreen />} />
             <Route path="/unauthorized" element={
               <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>
                 <h2>No tienes permiso para ver esta página.</h2>
