@@ -24,6 +24,7 @@ export default function StorePos() {
     const STORE_ID = '00000000-0000-0000-0000-000000000000'; // For this MVP we assume the cashier is in the main branch.
 
     const fetchClient = async (identifier: string) => {
+        console.log('[StorePos] Buscando cliente con identifier:', JSON.stringify(identifier));
         setLoadingSearch(true);
         setSearchError('');
         setClientData(null);
@@ -32,9 +33,11 @@ export default function StorePos() {
 
         try {
             const data = await getClientProfile(identifier);
+            console.log('[StorePos] Cliente encontrado:', data);
             setClientData(data);
             setScannerActive(false); // Stop scanner if found
         } catch (err: any) {
+            console.error('[StorePos] Error buscando cliente:', err.response?.status, err.response?.data, err.message);
             setSearchError(extractApiError(err, 'Cliente no encontrado.'));
         } finally {
             setLoadingSearch(false);
