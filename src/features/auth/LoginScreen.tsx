@@ -18,12 +18,15 @@ export default function LoginScreen() {
     // Login state
     const [loginDni, setLoginDni] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [loadingLogin, setLoadingLogin] = useState(false);
     const [errorLogin, setErrorLogin] = useState('');
 
     // Register state
     const [regEmail, setRegEmail] = useState('');
     const [regPassword, setRegPassword] = useState('');
+    const [regConfirmPassword, setRegConfirmPassword] = useState('');
+    const [showRegPassword, setShowRegPassword] = useState(false);
     const [regDni, setRegDni] = useState('');
     const [loadingReg, setLoadingReg] = useState(false);
     const [successReg, setSuccessReg] = useState('');
@@ -90,6 +93,10 @@ export default function LoginScreen() {
             setErrorReg('La contraseña debe tener al menos 8 caracteres.');
             return;
         }
+        if (regPassword !== regConfirmPassword) {
+            setErrorReg('Las contraseñas no coinciden.');
+            return;
+        }
         if (!regDni || !/^\d+$/.test(regDni)) {
             setErrorReg('El DNI es obligatorio y debe contener solo números.');
             return;
@@ -151,14 +158,24 @@ export default function LoginScreen() {
 
                         <div className="input-group">
                             <label className="input-label">Tu Contraseña</label>
-                            <input
-                                type="password"
-                                className="input-field"
-                                placeholder="Mínimo 8 caracteres"
-                                value={loginPassword}
-                                onChange={(e) => setLoginPassword(e.target.value)}
-                                required
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showLoginPassword ? 'text' : 'password'}
+                                    className="input-field"
+                                    placeholder="Mínimo 8 caracteres"
+                                    value={loginPassword}
+                                    onChange={(e) => setLoginPassword(e.target.value)}
+                                    required
+                                    style={{ paddingRight: '3rem' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '0.85rem', padding: '0.25rem' }}
+                                >
+                                    {showLoginPassword ? 'Ocultar' : 'Ver'}
+                                </button>
+                            </div>
                         </div>
 
                         {errorLogin && <p className="input-error" style={{ marginBottom: '1rem' }}>{errorLogin}</p>}
@@ -166,6 +183,10 @@ export default function LoginScreen() {
                         <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loadingLogin}>
                             {loadingLogin ? 'Ingresando...' : 'Iniciar Sesión'}
                         </button>
+
+                        <p style={{ textAlign: 'center', marginTop: '1rem' }}>
+                            <a href="/recuperar" style={{ color: 'var(--color-primary)', fontSize: '0.85rem', textDecoration: 'underline' }}>¿Olvidaste tu contraseña?</a>
+                        </p>
                     </form>
                 ) : (
                     <form onSubmit={handleRegister}>
@@ -185,12 +206,34 @@ export default function LoginScreen() {
 
                         <div className="input-group">
                             <label className="input-label">Contraseña</label>
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showRegPassword ? 'text' : 'password'}
+                                    className="input-field"
+                                    placeholder="Mínimo 8 caracteres"
+                                    value={regPassword}
+                                    onChange={(e) => setRegPassword(e.target.value)}
+                                    required
+                                    style={{ paddingRight: '3rem' }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRegPassword(!showRegPassword)}
+                                    style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '0.85rem', padding: '0.25rem' }}
+                                >
+                                    {showRegPassword ? 'Ocultar' : 'Ver'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="input-group">
+                            <label className="input-label">Confirmar Contraseña</label>
                             <input
-                                type="password"
+                                type={showRegPassword ? 'text' : 'password'}
                                 className="input-field"
-                                placeholder="Mínimo 8 caracteres"
-                                value={regPassword}
-                                onChange={(e) => setRegPassword(e.target.value)}
+                                placeholder="Repetir contraseña"
+                                value={regConfirmPassword}
+                                onChange={(e) => setRegConfirmPassword(e.target.value)}
                                 required
                             />
                         </div>

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './core/auth/AuthContext';
 import LoginScreen from './features/auth/LoginScreen';
 import StoreLoginScreen from './features/auth/StoreLoginScreen';
+import PasswordResetScreen from './features/auth/PasswordResetScreen';
 
 // Simple Loader Component
 const GlobalLoader = () => (
@@ -41,6 +42,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<LoginScreen />} />
             <Route path="/login/sucursal" element={<StoreLoginScreen />} />
+            <Route path="/recuperar" element={<PasswordResetScreen />} />
             <Route path="/unauthorized" element={
               <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>
                 <h2>No tienes permiso para ver esta página.</h2>

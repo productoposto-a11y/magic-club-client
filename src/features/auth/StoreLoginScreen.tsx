@@ -14,6 +14,7 @@ export default function StoreLoginScreen() {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -91,14 +92,24 @@ export default function StoreLoginScreen() {
 
                     <div className="input-group">
                         <label className="input-label">Contraseña</label>
-                        <input
-                            type="password"
-                            className="input-field"
-                            placeholder="Mínimo 8 caracteres"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                className="input-field"
+                                placeholder="Mínimo 8 caracteres"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{ paddingRight: '3rem' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '0.85rem', padding: '0.25rem' }}
+                            >
+                                {showPassword ? 'Ocultar' : 'Ver'}
+                            </button>
+                        </div>
                     </div>
 
                     {error && <p className="input-error" style={{ marginBottom: '1rem' }}>{error}</p>}

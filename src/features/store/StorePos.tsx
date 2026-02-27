@@ -45,6 +45,8 @@ export default function StorePos() {
     const [purchaseMeta, setPurchaseMeta] = useState({ current_page: 1, page_size: 20, total_records: 0 });
     const [loadingPurchases, setLoadingPurchases] = useState(false);
     const [voidingId, setVoidingId] = useState<string | null>(null);
+    const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null);
+    const [voidError, setVoidError] = useState('');
 
     // === DASHBOARD TAB STATE ===
     const [stats, setStats] = useState<StoreStats | null>(null);
@@ -177,14 +179,17 @@ export default function StorePos() {
         }
     };
 
-    const handleVoidPurchase = async (purchaseId: string) => {
-        if (!confirm('¿Invalidar esta compra? Esta acción no se puede deshacer.')) return;
-        setVoidingId(purchaseId);
+    const confirmVoidPurchase = async () => {
+        if (!voidConfirmId) return;
+        setVoidingId(voidConfirmId);
+        setVoidConfirmId(null);
+        setVoidError('');
         try {
-            await voidPurchase(purchaseId);
+            await voidPurchase(voidConfirmId);
+            setDataVersion(v => v + 1);
             fetchStorePurchases(purchaseMeta.current_page);
         } catch {
-            alert('Error al invalidar la compra.');
+            setVoidError('Error al invalidar la compra.');
         } finally {
             setVoidingId(null);
         }
@@ -453,7 +458,7 @@ export default function StorePos() {
                                                         <button
                                                             className="btn btn-outline"
                                                             style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: 'var(--color-danger)', minHeight: '32px' }}
-                                                            onClick={() => handleVoidPurchase(p.id)}
+                                                            onClick={() => setVoidConfirmId(p.id)}
                                                             disabled={voidingId === p.id}
                                                         >
                                                             {voidingId === p.id ? '...' : 'Anular'}
@@ -591,6 +596,30 @@ export default function StorePos() {
                             <button className="btn btn-outline" onClick={() => setConfirmAction(null)}>Cancelar</button>
                             <button className="btn btn-primary" onClick={() => processTransaction(confirmAction.type)}>Confirmar</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Void Purchase Confirmation Modal */}
+            {voidConfirmId && (
+                <div className="modal-overlay" onClick={() => setVoidConfirmId(null)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <h3 style={{ color: 'var(--color-danger)' }}>Anular Compra</h3>
+                        <p>¿Estás seguro de que deseas anular esta compra? Esta acción no se puede deshacer.</p>
+                        <div className="modal-actions">
+                            <button className="btn btn-outline" onClick={() => setVoidConfirmId(null)}>Cancelar</button>
+                            <button className="btn btn-danger" onClick={confirmVoidPurchase}>Anular</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Void Error Modal */}
+            {voidError && (
+                <div className="modal-overlay" onClick={() => setVoidError('')}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="alert-error" style={{ marginBottom: '1rem' }}>{voidError}</div>
+                        <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => setVoidError('')}>Cerrar</button>
                     </div>
                 </div>
             )}

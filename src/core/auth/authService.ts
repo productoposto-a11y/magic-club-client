@@ -19,3 +19,11 @@ export async function refreshTokens(): Promise<AuthTokens> {
 export async function logout(): Promise<void> {
   await apiClient.post('/tokens/logout');
 }
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiClient.post('/password/reset-request', { email });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await apiClient.post('/password/reset', { token, password });
+}
