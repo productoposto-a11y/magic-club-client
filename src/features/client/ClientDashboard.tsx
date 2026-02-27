@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getClientProfile, getClientPurchases, getClientRewards } from '../../core/api/clientService';
 import type { ClientProfileResponse, Purchase, Reward } from '../../core/types/api';
+import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSENotifications';
+import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 
 export default function ClientDashboard() {
@@ -13,6 +15,22 @@ export default function ClientDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [activeHistoryTab, setActiveHistoryTab] = useState<'purchases' | 'rewards'>('purchases');
+
+    const fetchAllData = useCallback(async () => {
+        if (!user?.email) return;
+        try {
+            const [profile, purchaseList, rewardList] = await Promise.all([
+                getClientProfile(user.email),
+                getClientPurchases(user.email),
+                getClientRewards(user.email),
+            ]);
+            setClientData(profile);
+            setPurchases(purchaseList);
+            setRewards(rewardList);
+        } catch {
+            // Silently fail on refresh — initial error is already shown
+        }
+    }, [user?.email]);
 
     useEffect(() => {
         let isMounted = true;
@@ -40,6 +58,22 @@ export default function ClientDashboard() {
 
         return () => { isMounted = false; };
     }, [user?.email]);
+
+    const handleSSEEvent = useCallback((event: SSEEventData) => {
+        if (event.type === 'purchase_registered') {
+            const amount = event.data.amount as number;
+            toast.info(`Compra de $${amount.toFixed(2)} registrada`);
+        } else if (event.type === 'reward_redeemed') {
+            const amount = event.data.amount_discounted as number;
+            toast.success(`Premio canjeado: $${amount.toFixed(2)} de descuento`);
+        }
+        fetchAllData();
+    }, [fetchAllData]);
+
+    useSSENotifications({
+        onEvent: handleSSEEvent,
+        enabled: !loading && user?.role === 'client',
+    });
 
     if (loading) {
         return (

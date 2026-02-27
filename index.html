@@ -1,12 +1,78 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light only" />
     <meta name="darkreader-lock" />
+    <meta name="supported-color-schemes" content="light only" />
     <title>Magic Club</title>
+
+    <!--
+      Anti-dark-mode shield: runs BEFORE anything else.
+      Removes injected stylesheets from Dark Reader, Night Eye, Dark Mode, etc.
+      and forces light-mode inline styles on <html>.
+    -->
+    <script>
+      (function () {
+        var html = document.documentElement;
+        var force = function () {
+          html.style.setProperty('filter', 'none', 'important');
+          html.style.setProperty('-webkit-filter', 'none', 'important');
+          html.style.setProperty('background-color', '#f8fafc', 'important');
+          html.style.setProperty('color', '#0f172a', 'important');
+          html.style.setProperty('color-scheme', 'light only', 'important');
+        };
+        force();
+
+        var isDarkExt = function (node) {
+          if (node.nodeType !== 1) return false;
+          var c = (node.className || '').toString().toLowerCase();
+          var id = (node.id || '').toLowerCase();
+          return (
+            c.indexOf('darkreader') > -1 ||
+            id.indexOf('darkreader') > -1 ||
+            c.indexOf('nighteye') > -1 ||
+            c.indexOf('night-eye') > -1 ||
+            c.indexOf('night_eye') > -1 ||
+            c.indexOf('dark-mode-ext') > -1 ||
+            c.indexOf('turnoffthelights') > -1
+          );
+        };
+
+        new MutationObserver(function (mutations) {
+          for (var i = 0; i < mutations.length; i++) {
+            var m = mutations[i];
+
+            // Remove injected dark-mode style/link elements
+            for (var j = 0; j < m.addedNodes.length; j++) {
+              var n = m.addedNodes[j];
+              if (isDarkExt(n)) n.remove();
+            }
+
+            // Remove darkreader attributes from <html>
+            if (m.type === 'attributes' && m.target === html) {
+              var attr = m.attributeName || '';
+              if (attr.indexOf('darkreader') > -1 || attr === 'data-nighteye') {
+                html.removeAttribute(attr);
+              }
+            }
+          }
+          force();
+        }).observe(html, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: [
+            'data-darkreader-mode',
+            'data-darkreader-scheme',
+            'data-nighteye',
+            'style'
+          ]
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -15,6 +15,9 @@ export const apiClient = axios.create({
 let currentAccessToken = '';
 let currentCsrfToken = '';
 
+// Getter for the current access token (used by SSE EventSource which can't send headers)
+export const getAccessToken = (): string => currentAccessToken;
+
 // Function to update tokens in memory when logging in or refreshing
 export const setTokens = (accessToken: string, csrfToken: string) => {
   currentAccessToken = accessToken;
