@@ -193,7 +193,7 @@ export default function StorePos() {
     }, [activeTab, dataVersion]);
 
     return (
-        <div className="container" style={{ paddingBottom: '4rem' }}>
+        <div className="container" style={{ paddingBottom: '2rem' }}>
 
             <div className="page-header">
                 <h1>Terminal Sucursal</h1>
@@ -226,7 +226,7 @@ export default function StorePos() {
 
             {/* === SCAN TAB === */}
             {activeTab === 'scan' && (
-                <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+                <div style={{ maxWidth: '500px', margin: '0 auto' }}>
                     {lastTxSuccess && (
                         <div className="alert-success" style={{ marginBottom: '1rem', cursor: 'pointer' }} onClick={() => setLastTxSuccess('')}>
                             {lastTxSuccess}
@@ -336,13 +336,13 @@ export default function StorePos() {
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>No hay compras registradas aún.</p>
                     ) : (
                         <>
-                            <div style={{ overflowX: 'auto' }}>
+                            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                                 <table className="table">
                                     <thead>
                                         <tr>
-                                            <th>Pedido</th>
+                                            <th className="hide-mobile">Pedido</th>
                                             <th>Fecha</th>
-                                            <th>Cliente</th>
+                                            <th className="hide-mobile">Cliente</th>
                                             <th>DNI</th>
                                             <th>Monto</th>
                                             <th>Estado</th>
@@ -352,11 +352,11 @@ export default function StorePos() {
                                     <tbody>
                                         {storePurchases.map((p) => (
                                             <tr key={p.id} style={p.status === 'voided' ? { opacity: 0.5 } : undefined}>
-                                                <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
-                                                <td>{new Date(p.created_at).toLocaleDateString()}</td>
-                                                <td style={{ fontSize: '0.85rem' }}>{p.client_email}</td>
+                                                <td className="hide-mobile" style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
+                                                <td style={{ whiteSpace: 'nowrap' }}>{new Date(p.created_at).toLocaleDateString()}</td>
+                                                <td className="hide-mobile" style={{ fontSize: '0.85rem' }}>{p.client_email}</td>
                                                 <td>{p.client_dni}</td>
-                                                <td>{p.status === 'voided' ? <s>{fmtPrice(p.amount)}</s> : fmtPrice(p.amount)}</td>
+                                                <td style={{ whiteSpace: 'nowrap' }}>{p.status === 'voided' ? <s>{fmtPrice(p.amount)}</s> : fmtPrice(p.amount)}</td>
                                                 <td>
                                                     <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
                                                         {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
@@ -366,7 +366,7 @@ export default function StorePos() {
                                                     {p.status === 'active' && (
                                                         <button
                                                             className="btn btn-outline"
-                                                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: 'var(--color-danger)' }}
+                                                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', color: 'var(--color-danger)', minHeight: '32px' }}
                                                             onClick={() => handleVoidPurchase(p.id)}
                                                             disabled={voidingId === p.id}
                                                         >
@@ -381,32 +381,34 @@ export default function StorePos() {
                             </div>
 
                             {/* Summary */}
-                            <div style={{ display: 'flex', gap: '2rem', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)' }}>
-                                <div>
-                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Total Facturado</span>
-                                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{fmtPrice(purchaseSummary.total_amount)}</p>
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)' }}>
+                                <div style={{ flex: '1 1 120px' }}>
+                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Total Facturado</span>
+                                    <p style={{ fontWeight: 700, fontSize: '1rem' }}>{fmtPrice(purchaseSummary.total_amount)}</p>
                                 </div>
-                                <div>
-                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Total Descontado</span>
-                                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{fmtPrice(purchaseSummary.total_discount)}</p>
+                                <div style={{ flex: '1 1 120px' }}>
+                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Total Descontado</span>
+                                    <p style={{ fontWeight: 700, fontSize: '1rem' }}>{fmtPrice(purchaseSummary.total_discount)}</p>
                                 </div>
                             </div>
 
                             {/* Pagination */}
                             {purchaseMeta.total_records > purchaseMeta.page_size && (
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
                                     <button
                                         className="btn btn-outline"
+                                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                                         disabled={purchaseMeta.current_page <= 1}
                                         onClick={() => fetchStorePurchases(purchaseMeta.current_page - 1)}
                                     >
                                         Anterior
                                     </button>
-                                    <span style={{ display: 'flex', alignItems: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                                        Página {purchaseMeta.current_page} de {Math.ceil(purchaseMeta.total_records / purchaseMeta.page_size)}
+                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', padding: '0 0.25rem' }}>
+                                        {purchaseMeta.current_page} / {Math.ceil(purchaseMeta.total_records / purchaseMeta.page_size)}
                                     </span>
                                     <button
                                         className="btn btn-outline"
+                                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                                         disabled={purchaseMeta.current_page >= Math.ceil(purchaseMeta.total_records / purchaseMeta.page_size)}
                                         onClick={() => fetchStorePurchases(purchaseMeta.current_page + 1)}
                                     >
@@ -429,22 +431,22 @@ export default function StorePos() {
                             <div className="spinner"></div>
                         </div>
                     ) : stats ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                            <div className="card" style={{ textAlign: 'center' }}>
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Compras</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary)' }}>{stats.total_purchases}</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Compras</p>
+                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{stats.total_purchases}</p>
                             </div>
-                            <div className="card" style={{ textAlign: 'center' }}>
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Facturado</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary)' }}>{fmtPrice(stats.total_billed)}</p>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Facturado</p>
+                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>{fmtPrice(stats.total_billed)}</p>
                             </div>
-                            <div className="card" style={{ textAlign: 'center' }}>
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Descontado</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-secondary)' }}>{fmtPrice(stats.total_discounted)}</p>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Descontado</p>
+                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-secondary)' }}>{fmtPrice(stats.total_discounted)}</p>
                             </div>
-                            <div className="card" style={{ textAlign: 'center' }}>
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Neto</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-success)' }}>{fmtPrice(stats.total_net)}</p>
+                            <div className="card" style={{ textAlign: 'center', padding: '1rem' }}>
+                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', fontWeight: 600 }}>Neto</p>
+                                <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-success)' }}>{fmtPrice(stats.total_net)}</p>
                             </div>
                         </div>
                     ) : (
@@ -474,15 +476,16 @@ export default function StorePos() {
                                 className="btn"
                                 style={{
                                     position: 'absolute',
-                                    bottom: '2rem',
+                                    bottom: 'max(2rem, env(safe-area-inset-bottom, 1rem))',
                                     left: '50%',
                                     transform: 'translateX(-50%)',
                                     backgroundColor: 'rgba(255,255,255,0.95)',
                                     color: '#0f172a',
                                     fontSize: '1.1rem',
-                                    padding: '0.85rem 2.5rem',
+                                    padding: '1rem 2.5rem',
                                     borderRadius: '12px',
                                     fontWeight: 700,
+                                    minWidth: '200px',
                                 }}
                             >
                                 Cerrar Escáner

@@ -99,7 +99,7 @@ export default function ClientDashboard() {
     const { active_purchases_count, reward_available, available_discount } = status;
 
     return (
-        <div className="container" style={{ paddingBottom: '4rem' }}>
+        <div className="container" style={{ paddingBottom: '2rem' }}>
 
             <div className="page-header">
                 <h1>Magic Club</h1>
@@ -107,13 +107,13 @@ export default function ClientDashboard() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <div className="card" style={{ marginBottom: '1rem' }}>
                 <div className="tab-nav">
                     <button
                         className={`tab-btn ${activeTab === 'purchases' ? 'active' : ''}`}
                         onClick={() => setActiveTab('purchases')}
                     >
-                        Mis Compras
+                        Compras
                     </button>
                     <button
                         className={`tab-btn ${activeTab === 'qr' ? 'active' : ''}`}
@@ -125,7 +125,7 @@ export default function ClientDashboard() {
                         className={`tab-btn ${activeTab === 'promo' ? 'active' : ''}`}
                         onClick={() => setActiveTab('promo')}
                     >
-                        Mi Promoción
+                        Promo
                     </button>
                 </div>
             </div>
@@ -133,15 +133,15 @@ export default function ClientDashboard() {
             {/* Tab Content */}
             {activeTab === 'purchases' && (
                 <div className="card">
-                    <h2 style={{ marginBottom: '1.5rem' }}>Mis Compras</h2>
+                    <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mis Compras</h2>
                     {purchases.length === 0 ? (
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no tienes compras registradas.</p>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
+                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                             <table className="table">
                                 <thead>
                                     <tr>
-                                        <th>Pedido</th>
+                                        <th className="hide-mobile">Pedido</th>
                                         <th>Fecha</th>
                                         <th>Monto</th>
                                         <th>Estado</th>
@@ -150,9 +150,9 @@ export default function ClientDashboard() {
                                 <tbody>
                                     {purchases.map((p) => (
                                         <tr key={p.id}>
-                                            <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
-                                            <td>{new Date(p.created_at).toLocaleDateString()}</td>
-                                            <td>{fmtPrice(p.amount)}</td>
+                                            <td className="hide-mobile" style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{new Date(p.created_at).toLocaleDateString()}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(p.amount)}</td>
                                             <td>
                                                 <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
                                                     {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
@@ -167,8 +167,8 @@ export default function ClientDashboard() {
 
                     {rewards.length > 0 && (
                         <>
-                            <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Premios Canjeados</h3>
-                            <div style={{ overflowX: 'auto' }}>
+                            <h3 style={{ marginTop: '1.5rem', marginBottom: '0.75rem', fontSize: '1rem' }}>Premios Canjeados</h3>
+                            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                                 <table className="table">
                                     <thead>
                                         <tr>
@@ -179,8 +179,8 @@ export default function ClientDashboard() {
                                     <tbody>
                                         {rewards.map((r) => (
                                             <tr key={r.id}>
-                                                <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                                                <td>{fmtPrice(r.amount_discounted)}</td>
+                                                <td style={{ whiteSpace: 'nowrap' }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                                                <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(r.amount_discounted)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -193,25 +193,25 @@ export default function ClientDashboard() {
 
             {activeTab === 'qr' && (
                 <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left' }}>Tu Pase Mágico</h2>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '2rem', width: '100%', textAlign: 'left' }}>
+                    <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left', fontSize: '1.15rem' }}>Tu Pase Mágico</h2>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', width: '100%', textAlign: 'left' }}>
                         Muestra este código en caja para sumar compras o canjear tus premios.
                     </p>
 
                     <div
                         className="qr-container"
-                        style={{ cursor: 'pointer', border: '1px solid var(--color-border)' }}
+                        style={{ cursor: 'pointer', border: '1px solid var(--color-border)', maxWidth: '100%' }}
                         onClick={() => setQrModalOpen(true)}
                     >
                         <QRCodeCanvas value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
                     </div>
 
-                    <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
+                    <p style={{ marginTop: '1rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
                         {(client.qr_code || '').toUpperCase()}
                     </p>
 
                     {client.dni && (
-                        <p style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                        <p style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
                             DNI: {client.dni}
                         </p>
                     )}
@@ -230,8 +230,8 @@ export default function ClientDashboard() {
             {qrModalOpen && (
                 <div className="qr-fullscreen-overlay" onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="qr-container" style={{ padding: '24px', borderRadius: '20px' }}>
-                            <QRCodeCanvas value={client.qr_code || ''} size={280} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
+                        <div className="qr-container" style={{ padding: '20px', borderRadius: '20px', maxWidth: 'calc(100vw - 4rem)' }}>
+                            <QRCodeCanvas value={client.qr_code || ''} size={Math.min(280, window.innerWidth - 120)} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
                         </div>
                         <p style={{ marginTop: '1.5rem', fontWeight: 700, letterSpacing: '3px', fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>
                             {(client.qr_code || '').toUpperCase()}
@@ -243,7 +243,7 @@ export default function ClientDashboard() {
                         )}
                         <button
                             className="btn btn-outline"
-                            style={{ marginTop: '2rem', fontSize: '1.1rem', padding: '0.85rem 2.5rem' }}
+                            style={{ marginTop: '2rem', fontSize: '1.1rem', padding: '1rem 2.5rem', minWidth: '160px' }}
                             onClick={() => setQrModalOpen(false)}
                         >
                             Cerrar
@@ -254,23 +254,23 @@ export default function ClientDashboard() {
 
             {activeTab === 'promo' && (
                 <div className="card">
-                    <h2 style={{ marginBottom: '1.5rem' }}>Mi Promoción</h2>
+                    <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mi Promoción</h2>
 
-                    <div style={{ padding: '2rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', textAlign: 'center', marginBottom: '1.5rem' }}>
-                        <span style={{ fontSize: '4rem', fontWeight: 800, color: reward_available ? 'var(--color-success)' : 'var(--color-primary)' }}>
+                    <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', textAlign: 'center', marginBottom: '1rem' }}>
+                        <span style={{ fontSize: '3rem', fontWeight: 800, color: reward_available ? 'var(--color-success)' : 'var(--color-primary)' }}>
                             {active_purchases_count}
                         </span>
-                        <span style={{ fontSize: '2rem', color: 'var(--color-text-muted)' }}>/ 5</span>
-                        <p style={{ marginTop: '0.5rem', fontWeight: 500 }}>compras registradas</p>
+                        <span style={{ fontSize: '1.5rem', color: 'var(--color-text-muted)' }}>/ 5</span>
+                        <p style={{ marginTop: '0.25rem', fontWeight: 500, fontSize: '0.9rem' }}>compras registradas</p>
                     </div>
 
                     {reward_available ? (
                         <div className="alert-success">
-                            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
-                            <p>Tienes en promedio <strong>{fmtPrice(available_discount)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
+                            <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
+                            <p style={{ fontSize: '0.9rem' }}>Tienes en promedio <strong>{fmtPrice(available_discount)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
                         </div>
                     ) : (
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', textAlign: 'center' }}>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
                             Te faltan <strong>{5 - active_purchases_count}</strong> compras para conseguir tu próximo descuento.
                         </p>
                     )}

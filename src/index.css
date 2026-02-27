@@ -96,6 +96,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.5rem;
+  min-height: 44px;
   border-radius: var(--border-radius);
   font-weight: 600;
   font-size: 1rem;
@@ -103,6 +104,7 @@ body {
   transition: all 0.2s ease;
   border: none;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primary {
@@ -137,12 +139,15 @@ body {
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
+  min-height: 44px;
   border: 1px solid #e2e8f0 !important;
   border-radius: var(--border-radius);
-  font-size: 1rem;
+  font-size: 16px; /* Prevents iOS auto-zoom on focus */
   transition: border-color 0.2s;
   background-color: #ffffff !important;
   color: #0f172a !important;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .input-field:focus {
@@ -257,6 +262,7 @@ body {
 .tab-btn {
   flex: 1;
   padding: 0.75rem 0.5rem;
+  min-height: 44px;
   background: none !important;
   border: none;
   border-bottom: 2px solid transparent;
@@ -265,6 +271,7 @@ body {
   font-size: 1rem;
   color: #64748b !important;
   transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .tab-btn.active {
@@ -445,10 +452,23 @@ body {
   padding: 2rem;
 }
 
+/* Responsive column visibility helpers */
+.hide-mobile {
+  /* visible by default */
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .main-content {
+    padding: 1rem 0;
+  }
+
   .flex-cards {
     flex-direction: column;
+  }
+
+  .page-header {
+    margin-bottom: 1.25rem;
   }
 
   .page-header h1 {
@@ -465,20 +485,139 @@ body {
 
   .table th,
   .table td {
-    padding: 0.5rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Modal takes more space on tablet */
+  .modal {
+    max-width: 95%;
+    width: 95%;
   }
 }
 
 @media (max-width: 480px) {
   .container {
-    padding: 0 1rem;
+    padding: 0 0.75rem;
   }
 
   .card {
     padding: 1rem;
+    border-radius: 10px;
   }
 
+  .main-content {
+    padding: 0.75rem 0;
+  }
+
+  .page-header {
+    margin-bottom: 1rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.15rem;
+  }
+
+  .tab-nav {
+    margin-bottom: 1rem;
+  }
+
+  .tab-btn {
+    font-size: 0.875rem;
+    padding: 0.65rem 0.25rem;
+  }
+
+  /* Modal goes nearly full-screen on small mobile */
   .modal {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Table compact mode */
+  .table {
+    font-size: 0.75rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.4rem 0.3rem;
+  }
+
+  .table th {
+    font-size: 0.65rem;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  /* Stat cards */
+  .stat-card .stat-value {
+    font-size: 1.25rem;
+  }
+
+  /* Pagination compact */
+  .pagination {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* QR fullscreen */
+  .qr-fullscreen-content {
+    padding: 1rem;
+  }
+
+  /* Alerts compact */
+  .alert-success,
+  .alert-error,
+  .alert-info {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  /* Input groups tighter */
+  .input-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .input-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.35rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+
+  .card {
+    padding: 0.75rem;
+  }
+
+  .tab-btn {
+    font-size: 0.8rem;
+  }
+
+  .btn {
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
   }
 }
