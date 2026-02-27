@@ -459,6 +459,62 @@ body {
   animation: fadeIn 0.2s ease-out;
 }
 
+/* Skeleton loading */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%) !important;
+  background-size: 400px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  color: transparent !important;
+  pointer-events: none;
+  user-select: none;
+  border: none !important;
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+}
+
+.skeleton-text-sm {
+  height: 11px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+}
+
+.skeleton-heading {
+  height: 20px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
+
+.skeleton-stat {
+  height: 36px;
+  border-radius: 8px;
+}
+
+.skeleton-btn {
+  height: 44px;
+  border-radius: var(--border-radius);
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
 /* QR Container - Dark mode safe zone */
 .qr-container {
   background-color: #ffffff !important;

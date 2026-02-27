@@ -269,9 +269,13 @@ export default function StorePos() {
                         <h2 style={{ marginBottom: '1.5rem' }}>Buscar Cliente</h2>
 
                         {loadingSearch ? (
-                            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                                <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
-                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>Buscando cliente...</p>
+                            <div style={{ padding: '0.5rem 0' }}>
+                                <div className="skeleton skeleton-text" style={{ width: '50%', marginBottom: '1.25rem' }}></div>
+                                <div className="skeleton" style={{ height: '60px', marginBottom: '1.5rem', borderRadius: '12px' }}></div>
+                                <div className="skeleton skeleton-text" style={{ width: '30%', margin: '0 auto 1.25rem' }}></div>
+                                <div className="skeleton skeleton-text-sm" style={{ width: '55%', marginBottom: '0.75rem' }}></div>
+                                <div className="skeleton" style={{ height: '44px', marginBottom: '1rem', borderRadius: '12px' }}></div>
+                                <div className="skeleton skeleton-btn" style={{ width: '100%' }}></div>
                             </div>
                         ) : (
                             <>
@@ -437,8 +441,15 @@ export default function StorePos() {
                     <h2 style={{ marginBottom: '1.5rem' }}>Compras de esta Sucursal</h2>
 
                     {loadingPurchases ? (
-                        <div style={{ textAlign: 'center', padding: '2rem' }}>
-                            <div className="spinner"></div>
+                        <div>
+                            {[1,2,3,4,5].map(i => (
+                                <div key={i} className="skeleton-row">
+                                    <div className="skeleton skeleton-text" style={{ flex: 1 }}></div>
+                                    <div className="skeleton skeleton-text" style={{ flex: 1 }}></div>
+                                    <div className="skeleton skeleton-text" style={{ flex: 1 }}></div>
+                                    <div className="skeleton skeleton-text" style={{ flex: 1 }}></div>
+                                </div>
+                            ))}
                         </div>
                     ) : storePurchases.length === 0 ? (
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>No hay compras registradas aún.</p>
@@ -535,8 +546,13 @@ export default function StorePos() {
                     <h2 style={{ marginBottom: '1.5rem' }}>Dashboard</h2>
 
                     {loadingStats ? (
-                        <div style={{ textAlign: 'center', padding: '2rem' }}>
-                            <div className="spinner"></div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                            {[1,2,3,4].map(i => (
+                                <div key={i} className="card" style={{ padding: '1rem', textAlign: 'center' }}>
+                                    <div className="skeleton skeleton-text-sm" style={{ width: '60%', margin: '0 auto 0.5rem' }}></div>
+                                    <div className="skeleton skeleton-stat" style={{ width: '70%', margin: '0 auto' }}></div>
+                                </div>
+                            ))}
                         </div>
                     ) : stats ? (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>

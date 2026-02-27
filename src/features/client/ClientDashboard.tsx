@@ -83,9 +83,28 @@ export default function ClientDashboard() {
 
     if (loading) {
         return (
-            <div className="loader-container">
-                <div className="spinner"></div>
-                <p style={{ marginTop: '1rem' }}>Cargando tu progreso...</p>
+            <div className="container" style={{ paddingBottom: '2rem' }}>
+                <div className="page-header">
+                    <div className="skeleton skeleton-heading" style={{ width: '140px' }}></div>
+                    <div className="skeleton skeleton-btn" style={{ width: '70px' }}></div>
+                </div>
+                <div className="card" style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="skeleton" style={{ flex: 1, height: '44px' }}></div>
+                        <div className="skeleton" style={{ flex: 1, height: '44px' }}></div>
+                        <div className="skeleton" style={{ flex: 1, height: '44px' }}></div>
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="skeleton skeleton-heading" style={{ width: '45%' }}></div>
+                    {[1,2,3,4].map(i => (
+                        <div key={i} className="skeleton-row">
+                            <div className="skeleton skeleton-text" style={{ flex: 2 }}></div>
+                            <div className="skeleton skeleton-text" style={{ flex: 1 }}></div>
+                            <div className="skeleton skeleton-text" style={{ flex: 1 }}></div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
