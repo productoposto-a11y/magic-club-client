@@ -200,7 +200,7 @@ export default function ClientDashboard() {
                         style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px', cursor: 'pointer' }}
                         onClick={() => setQrModalOpen(true)}
                     >
-                        <QRCode value={client.qr_code || ''} size={180} />
+                        <QRCode value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" />
                     </div>
 
                     <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
@@ -228,7 +228,7 @@ export default function ClientDashboard() {
                 <div className="qr-fullscreen-overlay" onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
                         <div style={{ padding: '1.5rem', backgroundColor: 'white', borderRadius: '20px', display: 'inline-block' }}>
-                            <QRCode value={client.qr_code || ''} size={280} />
+                            <QRCode value={client.qr_code || ''} size={280} bgColor="#FFFFFF" fgColor="#000000" />
                         </div>
                         <p style={{ marginTop: '1.5rem', fontWeight: 700, letterSpacing: '3px', fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>
                             {(client.qr_code || '').toUpperCase()}
