@@ -231,64 +231,28 @@ export default function ClientDashboard() {
 
             {/* QR Fullscreen Modal */}
             {qrModalOpen && (
-                <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#000000' }} onClick={() => setQrModalOpen(false)}>
-                    <div className="qr-fullscreen-content" style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#f8fafc' }} onClick={() => setQrModalOpen(false)}>
+                    <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
 
-                        {/* Header */}
-                        <div style={{
-                            position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-                            padding: 'max(1.5rem, env(safe-area-inset-top, 1rem)) 1.5rem 1rem',
-                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                            textAlign: 'center',
-                        }}>
-                            <p style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: 700 }}>Tu Pase Mágico</p>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Mostrá este QR en caja</p>
-                        </div>
+                        <p style={{ color: '#6366f1', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Tu Pase Mágico</p>
+                        <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '2rem' }}>Mostrá este QR en caja</p>
 
-                        {/* QR with frame */}
-                        <div style={{
-                            position: 'relative',
-                            padding: '28px',
-                            borderRadius: '24px',
-                            border: '3px solid rgba(255,255,255,0.8)',
-                            backgroundColor: '#ffffff',
-                            maxWidth: 'calc(100vw - 4rem)',
-                        }}>
-                            {/* Corner accents */}
-                            <div style={{ position: 'absolute', top: -3, left: -3, width: 28, height: 28, borderTop: '4px solid #6366f1', borderLeft: '4px solid #6366f1', borderRadius: '8px 0 0 0' }} />
-                            <div style={{ position: 'absolute', top: -3, right: -3, width: 28, height: 28, borderTop: '4px solid #6366f1', borderRight: '4px solid #6366f1', borderRadius: '0 8px 0 0' }} />
-                            <div style={{ position: 'absolute', bottom: -3, left: -3, width: 28, height: 28, borderBottom: '4px solid #6366f1', borderLeft: '4px solid #6366f1', borderRadius: '0 0 0 8px' }} />
-                            <div style={{ position: 'absolute', bottom: -3, right: -3, width: 28, height: 28, borderBottom: '4px solid #6366f1', borderRight: '4px solid #6366f1', borderRadius: '0 0 8px 0' }} />
-
+                        <div style={{ padding: '24px', borderRadius: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
                             <QRCodeCanvas value={client.qr_code || ''} size={Math.min(260, window.innerWidth - 140)} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
                         </div>
 
-                        <p style={{ marginTop: '1.5rem', fontWeight: 700, letterSpacing: '3px', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)' }}>
+                        <p style={{ marginTop: '1.25rem', fontWeight: 600, letterSpacing: '3px', fontSize: '1rem', color: '#0f172a' }}>
                             {(client.qr_code || '').toUpperCase()}
                         </p>
                         {client.dni && (
-                            <p style={{ marginTop: '0.5rem', fontSize: '1rem', color: 'rgba(255,255,255,0.5)' }}>
+                            <p style={{ marginTop: '0.35rem', fontSize: '0.9rem', color: '#64748b' }}>
                                 DNI: {client.dni}
                             </p>
                         )}
 
-                        {/* Close button */}
                         <button
-                            className="btn"
-                            style={{
-                                position: 'absolute',
-                                bottom: 'max(2rem, env(safe-area-inset-bottom, 1rem))',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                backgroundColor: 'rgba(255,255,255,0.95)',
-                                color: '#0f172a',
-                                fontSize: '1rem',
-                                padding: '0.9rem 2rem',
-                                borderRadius: '50px',
-                                fontWeight: 700,
-                                minWidth: '180px',
-                                boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                            }}
+                            className="btn btn-outline"
+                            style={{ marginTop: '2.5rem', fontSize: '1rem', padding: '0.85rem 2.5rem', borderRadius: '50px', minWidth: '160px' }}
                             onClick={() => setQrModalOpen(false)}
                         >
                             Cerrar

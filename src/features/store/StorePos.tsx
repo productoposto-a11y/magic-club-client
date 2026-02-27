@@ -573,11 +573,10 @@ export default function StorePos() {
                             <div style={{
                                 position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
                                 padding: 'max(1.5rem, env(safe-area-inset-top, 1rem)) 1.5rem 1rem',
-                                background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
                                 textAlign: 'center',
                             }}>
                                 <p style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: 700 }}>Escaneá el código QR</p>
-                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Apuntá la cámara al QR del cliente</p>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Apuntá la cámara al QR del cliente</p>
                             </div>
 
                             {/* Camera feed */}
@@ -593,25 +592,19 @@ export default function StorePos() {
                                         }
                                     }}
                                 />
-                                {/* Scan frame overlay */}
+                                {/* Scan frame */}
                                 <div style={{
                                     position: 'absolute', top: '50%', left: '50%',
                                     transform: 'translate(-50%, -50%)',
-                                    width: 'min(260px, 65vw)', height: 'min(260px, 65vw)',
-                                    border: '3px solid rgba(255,255,255,0.8)',
-                                    borderRadius: '24px',
-                                    boxShadow: '0 0 0 9999px rgba(0,0,0,0.4)',
+                                    width: 'min(240px, 60vw)', height: 'min(240px, 60vw)',
+                                    border: '2px solid rgba(255,255,255,0.6)',
+                                    borderRadius: '16px',
                                     pointerEvents: 'none',
                                 }}>
-                                    {/* Corner accents */}
-                                    <div style={{ position: 'absolute', top: -3, left: -3, width: 28, height: 28, borderTop: '4px solid #6366f1', borderLeft: '4px solid #6366f1', borderRadius: '8px 0 0 0' }} />
-                                    <div style={{ position: 'absolute', top: -3, right: -3, width: 28, height: 28, borderTop: '4px solid #6366f1', borderRight: '4px solid #6366f1', borderRadius: '0 8px 0 0' }} />
-                                    <div style={{ position: 'absolute', bottom: -3, left: -3, width: 28, height: 28, borderBottom: '4px solid #6366f1', borderLeft: '4px solid #6366f1', borderRadius: '0 0 0 8px' }} />
-                                    <div style={{ position: 'absolute', bottom: -3, right: -3, width: 28, height: 28, borderBottom: '4px solid #6366f1', borderRight: '4px solid #6366f1', borderRadius: '0 0 8px 0' }} />
-                                    {/* Scan line animation */}
+                                    {/* Scan line */}
                                     <div style={{
-                                        position: 'absolute', left: 12, right: 12, height: 2,
-                                        backgroundColor: '#6366f1', borderRadius: 2, opacity: 0.8,
+                                        position: 'absolute', left: 16, right: 16, height: 2,
+                                        backgroundColor: '#6366f1', borderRadius: 2, opacity: 0.7,
                                         animation: 'scanLine 2s ease-in-out infinite',
                                     }} />
                                 </div>
@@ -620,20 +613,17 @@ export default function StorePos() {
                             {/* Close button */}
                             <button
                                 onClick={() => setScannerActive(false)}
-                                className="btn"
+                                className="btn btn-outline"
                                 style={{
                                     position: 'absolute',
                                     bottom: 'max(2rem, env(safe-area-inset-bottom, 1rem))',
                                     left: '50%',
                                     transform: 'translateX(-50%)',
-                                    backgroundColor: 'rgba(255,255,255,0.95)',
-                                    color: '#0f172a',
+                                    backgroundColor: 'rgba(255,255,255,0.9)',
                                     fontSize: '1rem',
-                                    padding: '0.9rem 2rem',
+                                    padding: '0.85rem 2rem',
                                     borderRadius: '50px',
-                                    fontWeight: 700,
-                                    minWidth: '180px',
-                                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                                    minWidth: '170px',
                                 }}
                             >
                                 Cerrar Escáner
