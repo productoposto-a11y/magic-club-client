@@ -27,6 +27,7 @@ export default function StorePos() {
     const [txError, setTxError] = useState('');
     const [amountError, setAmountError] = useState('');
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+    const [lastTxSuccess, setLastTxSuccess] = useState('');
 
     // === PURCHASES TAB STATE ===
     const [storePurchases, setStorePurchases] = useState<StorePurchaseItem[]>([]);
@@ -47,6 +48,7 @@ export default function StorePos() {
         setClientData(null);
         setTxSuccess('');
         setTxError('');
+        setLastTxSuccess('');
 
         try {
             const data = await getClientProfile(identifier);
@@ -63,16 +65,6 @@ export default function StorePos() {
         e.preventDefault();
         if (!searchInput) return;
         fetchClient(searchInput);
-    };
-
-    const refreshClientData = async () => {
-        if (!clientData) return;
-        try {
-            const data = await getClientProfile(clientData.client.email);
-            setClientData(data);
-        } catch {
-            setClientData(null);
-        }
     };
 
     const validateAmount = (): boolean => {
@@ -113,16 +105,19 @@ export default function StorePos() {
         setConfirmAction(null);
 
         try {
+            let successMsg: string;
             if (type === 'redeem') {
                 await redeemReward(clientData.client.id, STORE_ID, clientData.status.available_discount);
-                setTxSuccess(`¡Premio canjeado! Descuento aplicado: $${clientData.status.available_discount.toFixed(2)}`);
+                successMsg = `¡Premio canjeado! Descuento aplicado: $${clientData.status.available_discount.toFixed(2)}`;
             } else {
                 await createPurchase(clientData.client.id, STORE_ID, Number(purchaseAmount));
-                setTxSuccess(`¡Compra de $${Number(purchaseAmount).toFixed(2)} registrada exitosamente!`);
+                successMsg = `¡Compra de $${Number(purchaseAmount).toFixed(2)} registrada exitosamente!`;
                 setPurchaseAmount('');
             }
 
-            await refreshClientData();
+            // Close client modal and show success as toast-like message
+            setClientData(null);
+            setLastTxSuccess(successMsg);
         } catch (err: any) {
             setTxError(extractApiError(err, err.message || 'Error procesando la transacción.'));
         } finally {
@@ -202,6 +197,11 @@ export default function StorePos() {
             {/* === SCAN TAB === */}
             {activeTab === 'scan' && (
                 <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+                    {lastTxSuccess && (
+                        <div className="alert-success" style={{ marginBottom: '1rem', cursor: 'pointer' }} onClick={() => setLastTxSuccess('')}>
+                            {lastTxSuccess}
+                        </div>
+                    )}
                     <div className="card">
                         <h2 style={{ marginBottom: '1.5rem' }}>Buscar Cliente</h2>
 
@@ -309,6 +309,7 @@ export default function StorePos() {
                                 <table className="table">
                                     <thead>
                                         <tr>
+                                            <th>Pedido</th>
                                             <th>Fecha</th>
                                             <th>Cliente</th>
                                             <th>DNI</th>
@@ -319,6 +320,7 @@ export default function StorePos() {
                                     <tbody>
                                         {storePurchases.map((p) => (
                                             <tr key={p.id}>
+                                                <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
                                                 <td>{new Date(p.created_at).toLocaleDateString()}</td>
                                                 <td style={{ fontSize: '0.85rem' }}>{p.client_email}</td>
                                                 <td>{p.client_dni}</td>

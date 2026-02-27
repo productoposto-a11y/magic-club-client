@@ -139,6 +139,7 @@ export default function ClientDashboard() {
                             <table className="table">
                                 <thead>
                                     <tr>
+                                        <th>Pedido</th>
                                         <th>Fecha</th>
                                         <th>Monto</th>
                                         <th>Estado</th>
@@ -147,6 +148,7 @@ export default function ClientDashboard() {
                                 <tbody>
                                     {purchases.map((p) => (
                                         <tr key={p.id}>
+                                            <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
                                             <td>{new Date(p.created_at).toLocaleDateString()}</td>
                                             <td>${p.amount.toFixed(2)}</td>
                                             <td>

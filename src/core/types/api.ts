@@ -27,6 +27,7 @@ export interface AuthTokens {
 
 export interface Purchase {
   id: string;
+  order_id: string;
   client_id: string;
   store_id: string;
   amount: number;
@@ -77,6 +78,7 @@ export interface StoreStats {
 
 export interface StorePurchaseItem {
   id: string;
+  order_id: string;
   client_email: string;
   client_dni: string;
   amount: number;
