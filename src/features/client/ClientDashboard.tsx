@@ -6,6 +6,8 @@ import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSEN
 import { toast } from 'sonner';
 import QRCode from 'react-qr-code';
 
+const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export default function ClientDashboard() {
     const { user, logout } = useAuth();
 
@@ -63,10 +65,10 @@ export default function ClientDashboard() {
     const handleSSEEvent = useCallback((event: SSEEventData) => {
         if (event.type === 'purchase_registered') {
             const amount = event.data.amount as number;
-            toast.info(`Compra de $${amount.toFixed(2)} registrada`);
+            toast.info(`Compra de ${fmtPrice(amount)} registrada`);
         } else if (event.type === 'reward_redeemed') {
             const amount = event.data.amount_discounted as number;
-            toast.success(`Premio canjeado: $${amount.toFixed(2)} de descuento`);
+            toast.success(`Premio canjeado: ${fmtPrice(amount)} de descuento`);
         }
         fetchAllData();
     }, [fetchAllData]);
@@ -150,7 +152,7 @@ export default function ClientDashboard() {
                                         <tr key={p.id}>
                                             <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
                                             <td>{new Date(p.created_at).toLocaleDateString()}</td>
-                                            <td>${p.amount.toFixed(2)}</td>
+                                            <td>{fmtPrice(p.amount)}</td>
                                             <td>
                                                 <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
                                                     {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
@@ -178,7 +180,7 @@ export default function ClientDashboard() {
                                         {rewards.map((r) => (
                                             <tr key={r.id}>
                                                 <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                                                <td>${r.amount_discounted.toFixed(2)}</td>
+                                                <td>{fmtPrice(r.amount_discounted)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -197,10 +199,11 @@ export default function ClientDashboard() {
                     </p>
 
                     <div
-                        style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px', cursor: 'pointer' }}
+                        className="qr-container"
+                        style={{ cursor: 'pointer', border: '1px solid var(--color-border)' }}
                         onClick={() => setQrModalOpen(true)}
                     >
-                        <QRCode value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" />
+                        <QRCode value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" level="H" />
                     </div>
 
                     <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
@@ -227,8 +230,8 @@ export default function ClientDashboard() {
             {qrModalOpen && (
                 <div className="qr-fullscreen-overlay" onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
-                        <div style={{ padding: '1.5rem', backgroundColor: 'white', borderRadius: '20px', display: 'inline-block' }}>
-                            <QRCode value={client.qr_code || ''} size={280} bgColor="#FFFFFF" fgColor="#000000" />
+                        <div className="qr-container" style={{ padding: '24px', borderRadius: '20px' }}>
+                            <QRCode value={client.qr_code || ''} size={280} bgColor="#FFFFFF" fgColor="#000000" level="H" />
                         </div>
                         <p style={{ marginTop: '1.5rem', fontWeight: 700, letterSpacing: '3px', fontSize: '1.1rem', color: 'var(--color-text-muted)' }}>
                             {(client.qr_code || '').toUpperCase()}
@@ -264,7 +267,7 @@ export default function ClientDashboard() {
                     {reward_available ? (
                         <div className="alert-success">
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
-                            <p>Tienes en promedio <strong>${available_discount.toFixed(2)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
+                            <p>Tienes en promedio <strong>{fmtPrice(available_discount)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
                         </div>
                     ) : (
                         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem', textAlign: 'center' }}>

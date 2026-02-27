@@ -400,6 +400,26 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* QR Container - Dark mode safe zone */
+.qr-container {
+  background-color: #ffffff !important;
+  padding: 20px;
+  border-radius: 16px;
+  display: inline-block;
+  color-scheme: light !important;
+  isolation: isolate;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .qr-container {
+    isolation: isolate;
+    filter: none !important;
+    -webkit-filter: none !important;
+  }
+}
+
 /* QR Fullscreen Modal */
 .qr-fullscreen-overlay {
   position: fixed;

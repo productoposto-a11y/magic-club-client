@@ -11,6 +11,8 @@ interface ConfirmAction {
     message: string;
 }
 
+const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 export default function StorePos() {
     const { logout } = useAuth();
     const [activeTab, setActiveTab] = useState<'scan' | 'purchases' | 'dashboard'>('scan');
@@ -99,13 +101,13 @@ export default function StorePos() {
             if (!validateAmount()) return;
             setConfirmAction({
                 type: 'purchase',
-                message: `¿Registrar compra de $${rawAmount().toLocaleString('es-AR')}?`,
+                message: `¿Registrar compra de ${fmtPrice(rawAmount())}?`,
             });
         } else {
             if (!clientData) return;
             setConfirmAction({
                 type: 'redeem',
-                message: `¿Confirmar descuento de $${clientData.status.available_discount.toFixed(2)}?`,
+                message: `¿Confirmar descuento de ${fmtPrice(clientData.status.available_discount)}?`,
             });
         }
     };
@@ -121,11 +123,11 @@ export default function StorePos() {
             let successMsg: string;
             if (type === 'redeem') {
                 await redeemReward(clientData.client.id, STORE_ID, clientData.status.available_discount);
-                successMsg = `¡Premio canjeado! Descuento aplicado: $${clientData.status.available_discount.toFixed(2)}`;
+                successMsg = `¡Premio canjeado! Descuento aplicado: ${fmtPrice(clientData.status.available_discount)}`;
             } else {
                 const amount = rawAmount();
                 await createPurchase(clientData.client.id, STORE_ID, amount);
-                successMsg = `¡Compra de $${amount.toLocaleString('es-AR')} registrada exitosamente!`;
+                successMsg = `¡Compra de ${fmtPrice(amount)} registrada exitosamente!`;
                 setPurchaseAmount('');
             }
 
@@ -288,7 +290,7 @@ export default function StorePos() {
                         {clientData.status.reward_available ? (
                             <div style={{ padding: '1.5rem', backgroundColor: '#fdf2f8', border: '2px solid var(--color-secondary)', borderRadius: 'var(--border-radius)' }}>
                                 <h3 style={{ color: 'var(--color-secondary)', marginBottom: '0.5rem' }}>¡Premio Disponible!</h3>
-                                <p style={{ marginBottom: '1.5rem' }}>Descuento a favor de <strong>${clientData.status.available_discount.toFixed(2)}</strong></p>
+                                <p style={{ marginBottom: '1.5rem' }}>Descuento a favor de <strong>{fmtPrice(clientData.status.available_discount)}</strong></p>
 
                                 <button onClick={() => requestConfirmation('redeem')} className="btn" style={{ width: '100%', backgroundColor: 'var(--color-secondary)', color: 'white' }} disabled={loadingTx}>
                                     {loadingTx ? 'Procesando...' : 'Aplicar Descuento y Canjear'}
@@ -354,7 +356,7 @@ export default function StorePos() {
                                                 <td>{new Date(p.created_at).toLocaleDateString()}</td>
                                                 <td style={{ fontSize: '0.85rem' }}>{p.client_email}</td>
                                                 <td>{p.client_dni}</td>
-                                                <td>{p.status === 'voided' ? <s>${p.amount.toFixed(2)}</s> : `$${p.amount.toFixed(2)}`}</td>
+                                                <td>{p.status === 'voided' ? <s>{fmtPrice(p.amount)}</s> : fmtPrice(p.amount)}</td>
                                                 <td>
                                                     <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
                                                         {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
@@ -382,11 +384,11 @@ export default function StorePos() {
                             <div style={{ display: 'flex', gap: '2rem', marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)' }}>
                                 <div>
                                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Total Facturado</span>
-                                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>${purchaseSummary.total_amount.toFixed(2)}</p>
+                                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{fmtPrice(purchaseSummary.total_amount)}</p>
                                 </div>
                                 <div>
                                     <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Total Descontado</span>
-                                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>${purchaseSummary.total_discount.toFixed(2)}</p>
+                                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{fmtPrice(purchaseSummary.total_discount)}</p>
                                 </div>
                             </div>
 
@@ -434,15 +436,15 @@ export default function StorePos() {
                             </div>
                             <div className="card" style={{ textAlign: 'center' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Facturado</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary)' }}>${stats.total_billed.toFixed(2)}</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary)' }}>{fmtPrice(stats.total_billed)}</p>
                             </div>
                             <div className="card" style={{ textAlign: 'center' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Descontado</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-secondary)' }}>${stats.total_discounted.toFixed(2)}</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-secondary)' }}>{fmtPrice(stats.total_discounted)}</p>
                             </div>
                             <div className="card" style={{ textAlign: 'center' }}>
                                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Neto</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-success)' }}>${stats.total_net.toFixed(2)}</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-success)' }}>{fmtPrice(stats.total_net)}</p>
                             </div>
                         </div>
                     ) : (
