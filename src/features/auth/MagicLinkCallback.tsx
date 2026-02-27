@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { apiClient, setTokens } from '../../core/api/axios';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { setTokens } from '../../core/api/axios';
+import { authenticateMagicLink } from '../../core/auth/authService';
+import { useAuth } from '../../core/auth/AuthContext';
 
 export default function MagicLinkCallback() {
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
     const [error, setError] = useState('');
-
-    // Use the global AuthContext function to parse claims natively since attemptSilentRefresh handles it on boot
-    // but here we are receiving fresh tokens manually via URL callback
+    const hasRun = useRef(false);
+    const navigate = useNavigate();
+    const { loginWithTokens } = useAuth();
 
     useEffect(() => {
+        if (hasRun.current) return;
+        hasRun.current = true;
+
         if (!token) {
             setError('Enlace inválido o expirado.');
             return;
@@ -18,32 +23,45 @@ export default function MagicLinkCallback() {
 
         const authenticateToken = async () => {
             try {
-                const res = await apiClient.post('/users/magic-link/authenticate', { token });
+                const data = await authenticateMagicLink(token);
 
-                // Save the HttpOnly cookie happens automatically by the browser. 
-                // We just need to persist the short-lived ones in memory.
-                const accessToken = res.data.authentication.access_token;
-                const csrfToken = res.data.authentication.csrf_token;
+                const accessToken = data.authentication.access_token;
+                const csrfToken = data.authentication.csrf_token;
 
-                // Set the tokens globally so sub-sequent requests don't fail CSRF
                 setTokens(accessToken, csrfToken);
 
-                // Best way to sync state is to simply reload the page, so the boot SilentRefresh reads everything securely
-                window.location.href = '/client';
+                // Parse JWT to extract user claims
+                const base64Url = accessToken.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                const decoded = JSON.parse(jsonPayload);
+
+                loginWithTokens(accessToken, csrfToken, {
+                    id: decoded.sub,
+                    email: decoded.email,
+                    role: decoded.role,
+                });
+
+                navigate('/client', { replace: true });
             } catch (err: any) {
                 setError(err.response?.data?.error?.message || 'El enlace mágico ha expirado o ya fue utilizado.');
             }
         };
 
         authenticateToken();
-    }, [token]);
+    }, [token, loginWithTokens, navigate]);
 
     if (error) {
         return (
             <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>
                 <h2 style={{ color: 'var(--color-danger)' }}>Error de Autenticación</h2>
                 <p>{error}</p>
-                <button onClick={() => window.location.href = '/login'} className="btn btn-primary" style={{ marginTop: '1rem' }}>
+                <button onClick={() => navigate('/login')} className="btn btn-primary" style={{ marginTop: '1rem' }}>
                     Volver al Inicio
                 </button>
             </div>

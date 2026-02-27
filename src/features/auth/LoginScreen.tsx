@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { apiClient } from '../../core/api/axios';
+import { setTokens } from '../../core/api/axios';
 import { useAuth } from '../../core/auth/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { loginWithPassword as apiLoginWithPassword } from '../../core/auth/authService';
+import { requestMagicLink } from '../../core/auth/authService';
+import { registerClient } from '../../core/api/clientService';
 
 export default function LoginScreen() {
-    const { user } = useAuth();
+    const { user, loginWithTokens } = useAuth();
+    const navigate = useNavigate();
 
     // States for Magic Link & Registration
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -23,7 +27,7 @@ export default function LoginScreen() {
     const [errorReg, setErrorReg] = useState('');
 
     // Client Password Login Toggle
-    const [loginWithPassword, setLoginWithPassword] = useState(false);
+    const [loginWithPasswordToggle, setLoginWithPasswordToggle] = useState(false);
     const [clientPassword, setClientPassword] = useState('');
 
     // States for Password Login (Cashiers/Admin)
@@ -31,6 +35,33 @@ export default function LoginScreen() {
     const [password, setPassword] = useState('');
     const [loadingPass, setLoadingPass] = useState(false);
     const [errorPass, setErrorPass] = useState('');
+
+    // Helper to parse JWT and login via AuthContext
+    const processAuthResponse = (data: { authentication: { access_token: string; csrf_token: string } }, redirectTo: string) => {
+        const accessToken = data.authentication.access_token;
+        const csrfToken = data.authentication.csrf_token;
+
+        setTokens(accessToken, csrfToken);
+
+        // Parse JWT to extract user claims
+        const base64Url = accessToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        const decoded = JSON.parse(jsonPayload);
+
+        loginWithTokens(accessToken, csrfToken, {
+            id: decoded.sub,
+            email: decoded.email,
+            role: decoded.role,
+        });
+
+        navigate(redirectTo, { replace: true });
+    };
 
     // If already logged in, redirect to their panel automatically
     if (user) {
@@ -46,19 +77,16 @@ export default function LoginScreen() {
         setSuccessMagic(false);
 
         try {
-            if (loginWithPassword) {
-                // Client logging in with password using the same endpoint as staff
-                await apiClient.post('/tokens/authentication', {
-                    email: emailMagic,
-                    password: clientPassword
-                });
-                window.location.href = '/client';
+            if (loginWithPasswordToggle) {
+                // Client logging in with password
+                const data = await apiLoginWithPassword(emailMagic, clientPassword);
+                processAuthResponse(data, '/client');
             } else {
-                await apiClient.post('/users/magic-link', { email: emailMagic });
+                await requestMagicLink(emailMagic);
                 setSuccessMagic(true);
             }
         } catch (err: any) {
-            setErrorMagic(err.response?.data?.error?.message || 'Error en la autenticación. Verifica tus datos.');
+            setErrorMagic(err.response?.data?.error?.message || err.response?.data?.error?.email || 'Error en la autenticación. Verifica tus datos.');
         } finally {
             setLoadingMagic(false);
         }
@@ -71,14 +99,10 @@ export default function LoginScreen() {
         setSuccessReg('');
 
         try {
-            await apiClient.post('/clients', {
-                email: regEmail,
-                password: regPassword || undefined,
-                dni: regDni || undefined
-            });
+            await registerClient(regEmail, regPassword, regDni);
             setSuccessReg('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
             setEmailMagic(regEmail);
-            if (regPassword) setLoginWithPassword(true);
+            if (regPassword) setLoginWithPasswordToggle(true);
             setTimeout(() => setActiveTab('login'), 2000);
         } catch (err: any) {
             setErrorReg(err.response?.data?.error?.email || err.response?.data?.error?.message || 'Error al crear la cuenta.');
@@ -89,22 +113,12 @@ export default function LoginScreen() {
 
     const handlePasswordLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // To be implemented: `apiClient.post('/tokens/authentication')`
-        // We haven't linked the traditional login to useAuth yet because we need the claims parsing there,
-        // but the `attemptSilentRefresh` inside AuthContext handles fetching the new user state anyway if we reload.
-        // For now, let's keep it simple.
-
         setLoadingPass(true);
         setErrorPass('');
 
         try {
-            // Send the traditional login request
-            await apiClient.post('/tokens/authentication', {
-                email: emailPass,
-                password: password
-            });
-            // Force a reload so the standard 'Silent Refresh Boot' reads the cookies.
-            window.location.href = '/store';
+            const data = await apiLoginWithPassword(emailPass, password);
+            processAuthResponse(data, '/store');
         } catch (err: any) {
             setErrorPass(err.response?.data?.error?.message || 'Credenciales incorrectas');
         } finally {
@@ -159,7 +173,7 @@ export default function LoginScreen() {
                                     />
                                 </div>
 
-                                {loginWithPassword && (
+                                {loginWithPasswordToggle && (
                                     <div className="input-group">
                                         <label className="input-label">Tu Contraseña</label>
                                         <input
@@ -176,16 +190,16 @@ export default function LoginScreen() {
                                 {errorMagic && <p style={{ color: 'var(--color-danger)', fontSize: '0.875rem', marginBottom: '1rem' }}>{errorMagic}</p>}
 
                                 <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loadingMagic}>
-                                    {loadingMagic ? 'Procesando...' : (loginWithPassword ? 'Iniciar Sesión' : 'Recibir Enlace Mágico')}
+                                    {loadingMagic ? 'Procesando...' : (loginWithPasswordToggle ? 'Iniciar Sesión' : 'Recibir Enlace Mágico')}
                                 </button>
 
                                 <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                                     <button
                                         type="button"
-                                        onClick={() => setLoginWithPassword(!loginWithPassword)}
+                                        onClick={() => setLoginWithPasswordToggle(!loginWithPasswordToggle)}
                                         style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '0.875rem', textDecoration: 'underline' }}
                                     >
-                                        {loginWithPassword ? 'Prefiero usar Enlace Mágico' : 'Prefiero usar mi contraseña'}
+                                        {loginWithPasswordToggle ? 'Prefiero usar Enlace Mágico' : 'Prefiero usar mi contraseña'}
                                     </button>
                                 </div>
                             </form>

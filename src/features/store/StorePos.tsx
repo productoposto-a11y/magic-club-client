@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { apiClient } from '../../core/api/axios';
+import { getClientProfile, createPurchase, redeemReward } from '../../core/api/clientService';
+import type { ClientProfileResponse } from '../../core/types/api';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 
 export default function StorePos() {
@@ -9,7 +10,7 @@ export default function StorePos() {
 
     // Client Lookup
     const [searchInput, setSearchInput] = useState('');
-    const [clientData, setClientData] = useState<any>(null);
+    const [clientData, setClientData] = useState<ClientProfileResponse | null>(null);
     const [loadingSearch, setLoadingSearch] = useState(false);
     const [searchError, setSearchError] = useState('');
 
@@ -29,8 +30,8 @@ export default function StorePos() {
         setTxError('');
 
         try {
-            const res = await apiClient.get(`/clients/${identifier}`);
-            setClientData(res.data);
+            const data = await getClientProfile(identifier);
+            setClientData(data);
             setScannerActive(false); // Stop scanner if found
         } catch (err: any) {
             setSearchError(err.response?.data?.error?.message || 'Cliente no encontrado.');
@@ -45,6 +46,17 @@ export default function StorePos() {
         fetchClient(searchInput);
     };
 
+    const refreshClientData = async () => {
+        if (!clientData) return;
+        try {
+            const data = await getClientProfile(clientData.client.email);
+            setClientData(data);
+        } catch {
+            // If refresh fails, clear the client data
+            setClientData(null);
+        }
+    };
+
     const processTransaction = async (type: 'purchase' | 'redeem') => {
         if (!clientData) return;
         setLoadingTx(true);
@@ -53,31 +65,19 @@ export default function StorePos() {
 
         try {
             if (type === 'redeem') {
-                await apiClient.post('/rewards/redeem', {
-                    client_id: clientData.client.id,
-                    store_id_used: STORE_ID,
-                    amount_discounted: clientData.status.available_discount
-                });
+                await redeemReward(clientData.client.id, STORE_ID, clientData.status.available_discount);
                 setTxSuccess(`¡Premio canjeado! Descuento aplicado: $${clientData.status.available_discount.toFixed(2)}`);
             } else {
                 if (!purchaseAmount || Number(purchaseAmount) <= 0) {
                     throw new Error('Ingrese un monto válido mayor a 0');
                 }
-                await apiClient.post('/purchases', {
-                    client_id: clientData.client.id,
-                    store_id: STORE_ID,
-                    amount: Number(purchaseAmount)
-                });
+                await createPurchase(clientData.client.id, STORE_ID, Number(purchaseAmount));
                 setTxSuccess(`¡Compra de $${Number(purchaseAmount).toFixed(2)} registrada exitosamente!`);
+                setPurchaseAmount('');
             }
 
-            // Clear after 3 seconds
-            setTimeout(() => {
-                setClientData(null);
-                setSearchInput('');
-                setPurchaseAmount('');
-                setTxSuccess('');
-            }, 3000);
+            // Refresh client data to show updated status
+            await refreshClientData();
 
         } catch (err: any) {
             setTxError(err.response?.data?.error?.message || err.message || 'Error procesando la transacción.');

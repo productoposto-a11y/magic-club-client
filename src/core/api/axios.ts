@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/v1';
+
 // Create a configured Axios instance
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000/v1',
+  baseURL: API_URL,
   withCredentials: true, // Required to send and receive HttpOnly Cookies
   headers: {
     'bypass-tunnel-reminder': 'true'
@@ -43,7 +45,7 @@ apiClient.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:4000/v1'}/tokens/refresh`,
+          `${API_URL}/tokens/refresh`,
           {},
           { withCredentials: true }
         );

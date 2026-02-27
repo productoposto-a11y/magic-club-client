@@ -1,29 +1,34 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { apiClient } from '../../core/api/axios';
+import { getClientProfile } from '../../core/api/clientService';
+import type { ClientProfileResponse } from '../../core/types/api';
 import QRCode from 'react-qr-code';
 
 export default function ClientDashboard() {
     const { user, logout } = useAuth();
 
-    const [clientData, setClientData] = useState<any>(null);
+    const [clientData, setClientData] = useState<ClientProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchProfile = async () => {
             if (!user?.email) return;
             try {
-                const res = await apiClient.get(`/clients/${user.email}`);
-                setClientData(res.data);
-            } catch (err: any) {
-                setError('No pudimos cargar tu perfil.');
+                const data = await getClientProfile(user.email);
+                if (isMounted) setClientData(data);
+            } catch {
+                if (isMounted) setError('No pudimos cargar tu perfil.');
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
         fetchProfile();
-    }, [user]);
+
+        return () => { isMounted = false; };
+    }, [user?.email]);
 
     if (loading) {
         return (
@@ -88,11 +93,11 @@ export default function ClientDashboard() {
                     </p>
 
                     <div style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--color-border)', borderRadius: '16px' }}>
-                        <QRCode value={client.qr_code} size={200} />
+                        <QRCode value={client.qr_code || ''} size={200} />
                     </div>
 
                     <p style={{ marginTop: '1.5rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)' }}>
-                        {client.qr_code.toUpperCase()}
+                        {(client.qr_code || '').toUpperCase()}
                     </p>
                 </div>
 
