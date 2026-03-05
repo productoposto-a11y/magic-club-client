@@ -369,7 +369,7 @@ export default function ClientDashboard() {
 
             {activeTab === 'qr' && (
                 <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left', fontSize: '1.15rem' }}>Tu Pase Mágico</h2>
+                    <h2 style={{ fontFamily: "'Cinzel', Georgia, serif", marginBottom: '0.5rem', width: '100%', textAlign: 'left', fontSize: '1.15rem', letterSpacing: '0.03em' }}>Tu Pase Mágico</h2>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', width: '100%', textAlign: 'left' }}>
                         Muestra este código en caja para sumar compras o canjear tus premios.
                     </p>
@@ -459,8 +459,8 @@ export default function ClientDashboard() {
                 <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#f8fafc' }} onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
 
-                        <p style={{ color: '#0c5aa4', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Tu Pase Mágico</p>
-                        <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '2rem' }}>Mostrá este QR en caja</p>
+                        <p style={{ fontFamily: "'Cinzel', Georgia, serif", color: 'var(--color-primary)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem', letterSpacing: '0.04em' }}>Tu Pase Mágico</p>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '2rem' }}>Mostrá este QR en caja</p>
 
                         <div style={{ padding: '24px', borderRadius: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
                             <QRCodeCanvas value={client.dni || ''} size={Math.min(260, window.innerWidth - 140)} bgColor="#FFFFFF" fgColor="#000000" level="L" includeMargin />

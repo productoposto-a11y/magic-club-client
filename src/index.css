@@ -1,51 +1,58 @@
 /*
- * Magic Club Loyalty System - Vanilla CSS Base
- * Modern, Minimalist, Responsive
+ * Magic Club Loyalty System — Enchanted Storybook Theme
+ * Disney-inspired magical aesthetic with #0c5aa4 as primary
  *
  * All color properties use !important to prevent dark-mode browser
- * extensions (Dark Reader, Night Eye, etc.) from overriding them.
+ * extensions from overriding them.
  */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   color-scheme: light only !important;
 
-  /* Color Palette */
-  --color-primary: #0c5aa4 !important; /* Blue 700 */
+  /* Enchanted Palette */
+  --color-primary: #0c5aa4 !important;
   --color-primary-hover: #094a87 !important;
-  --color-secondary: #ec4899 !important; /* Pink 500 */
-  --color-success: #10b981 !important; /* Emerald 500 */
-  --color-danger: #ef4444 !important; /* Red 500 */
+  --color-primary-light: #e8f2fc !important;
+  --color-secondary: #d4a017 !important; /* Royal Gold */
+  --color-secondary-light: #fdf6e3 !important;
+  --color-success: #10b981 !important;
+  --color-danger: #ef4444 !important;
 
-  --color-bg: #f8fafc !important; /* Slate 50 */
+  --color-bg: #f0f4f8 !important;
   --color-surface: #ffffff !important;
-  --color-text: #0f172a !important; /* Slate 900 */
-  --color-text-muted: #64748b !important; /* Slate 500 */
-  --color-border: #e2e8f0 !important; /* Slate 200 */
+  --color-text: #1a1d2e !important;
+  --color-text-muted: #6b7a99 !important;
+  --color-border: #d8dfe9 !important;
+
+  /* Magical Gradients */
+  --gradient-enchanted: linear-gradient(135deg, #0c5aa4 0%, #1a7fd4 40%, #0c5aa4 70%, #083d73 100%);
+  --gradient-gold: linear-gradient(135deg, #d4a017 0%, #f0d060 50%, #d4a017 100%);
+  --gradient-stardust: linear-gradient(160deg, #f0f4f8 0%, #e8f0fb 30%, #fdf6e3 60%, #f0f4f8 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #fafcff 50%, #fefdf8 100%);
 
   /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Cinzel', 'Georgia', serif;
+  --font-body: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Layout & Spacing */
-  --border-radius: 12px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Layout */
+  --border-radius: 16px;
+  --shadow-sm: 0 2px 8px rgba(12, 90, 164, 0.06);
+  --shadow-md: 0 4px 20px rgba(12, 90, 164, 0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 12px 40px rgba(12, 90, 164, 0.12), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-glow: 0 0 20px rgba(12, 90, 164, 0.15), 0 0 60px rgba(12, 90, 164, 0.05);
+  --shadow-gold: 0 4px 20px rgba(212, 160, 23, 0.15);
 }
 
-/*
- * Anti-dark-mode shield: block filter-based and injection-based extensions.
- * Extensions like Dark Reader apply filter:invert() on <html> — we force none.
- * The background-image trick with a 1x1 transparent PNG prevents extensions
- * that avoid modifying elements with background-image from touching these.
- */
+/* === MAGIC PARTICLES BACKGROUND === */
 html {
   filter: none !important;
   -webkit-filter: none !important;
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
+  background-color: #f0f4f8 !important;
+  color: #1a1d2e !important;
 }
 
-/* Base Reset */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -53,27 +60,64 @@ html {
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  line-height: 1.5;
+  font-family: var(--font-body);
+  background-color: #f0f4f8 !important;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(12, 90, 164, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(212, 160, 23, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(12, 90, 164, 0.02) 0%, transparent 70%) !important;
+  color: #1a1d2e !important;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  position: relative;
 }
 
-/* Helpers */
+/* Floating sparkle particles via pseudo-elements on body */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(2px 2px at 10% 15%, rgba(212, 160, 23, 0.4) 50%, transparent 50%),
+    radial-gradient(2px 2px at 25% 35%, rgba(212, 160, 23, 0.3) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 45% 10%, rgba(12, 90, 164, 0.3) 50%, transparent 50%),
+    radial-gradient(2px 2px at 60% 60%, rgba(212, 160, 23, 0.25) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 75% 25%, rgba(12, 90, 164, 0.25) 50%, transparent 50%),
+    radial-gradient(2px 2px at 85% 75%, rgba(212, 160, 23, 0.3) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 45%, rgba(12, 90, 164, 0.35) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 35% 80%, rgba(212, 160, 23, 0.2) 50%, transparent 50%),
+    radial-gradient(2px 2px at 55% 40%, rgba(212, 160, 23, 0.15) 50%, transparent 50%),
+    radial-gradient(1px 1px at 15% 65%, rgba(12, 90, 164, 0.2) 50%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: sparkleFloat 8s ease-in-out infinite alternate;
+}
+
+@keyframes sparkleFloat {
+  0% { opacity: 0.6; transform: translateY(0); }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; transform: translateY(-8px); }
+}
+
+/* === LAYOUT === */
 .container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
-/* Layout Blocks */
 .app-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f8fafc !important;
+  background-color: transparent !important;
 }
 
 .main-content {
@@ -81,75 +125,149 @@ body {
   padding: 2rem 0;
 }
 
-/* UI Components */
+/* === CARD — Enchanted Parchment === */
 .card {
-  background-color: #ffffff !important;
+  background: var(--gradient-card) !important;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-md);
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0 !important;
-  color: #0f172a !important;
+  padding: 1.75rem;
+  border: 1px solid rgba(12, 90, 164, 0.08) !important;
+  color: #1a1d2e !important;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-enchanted);
+  opacity: 0.6;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* === BUTTONS — Magical Interactions === */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.5rem;
-  min-height: 44px;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  font-size: 1rem;
+  min-height: 46px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: none;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
+  letter-spacing: 0.02em;
 }
 
 .btn:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.95);
 }
 
 .btn-primary {
-  background-color: #0c5aa4 !important;
+  background: var(--gradient-enchanted) !important;
   color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(12, 90, 164, 0.3);
 }
 
 .btn-primary:hover {
-  background-color: #094a87 !important;
+  box-shadow: 0 6px 25px rgba(12, 90, 164, 0.4), 0 0 30px rgba(12, 90, 164, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .btn-success {
-  background-color: #10b981 !important;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
   color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
 
 .btn-success:hover {
-  filter: brightness(0.9);
+  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background-color: rgba(255,255,255,0.8) !important;
+  border: 1.5px solid rgba(12, 90, 164, 0.2) !important;
+  color: #0c5aa4 !important;
+  backdrop-filter: blur(8px);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-primary-light) !important;
+  border-color: rgba(12, 90, 164, 0.4) !important;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* === FORM INPUTS — Enchanted Fields === */
 .input-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .input-label {
   display: block;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  color: #0f172a !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.45rem;
+  color: #1a1d2e !important;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .input-field {
   width: 100%;
-  padding: 0.75rem 1rem;
-  min-height: 44px;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: var(--border-radius);
-  font-size: 16px; /* Prevents iOS auto-zoom on focus */
-  transition: border-color 0.2s;
-  background-color: #ffffff !important;
-  color: #0f172a !important;
+  padding: 0.8rem 1rem;
+  min-height: 46px;
+  border: 1.5px solid #d8dfe9 !important;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: var(--font-body);
+  transition: all 0.3s ease;
+  background-color: rgba(255,255,255,0.9) !important;
+  color: #1a1d2e !important;
   -webkit-appearance: none;
   appearance: none;
 }
@@ -157,36 +275,15 @@ body {
 .input-field:focus {
   border-color: #0c5aa4 !important;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(12, 90, 164, 0.2) !important;
+  box-shadow: 0 0 0 4px rgba(12, 90, 164, 0.12), 0 0 20px rgba(12, 90, 164, 0.06) !important;
+  background-color: #ffffff !important;
 }
 
-/* Button Variants */
-.btn-danger {
-  background-color: #ef4444 !important;
-  color: #ffffff !important;
+.input-field::placeholder {
+  color: #9aa8c0;
 }
 
-.btn-danger:hover {
-  filter: brightness(0.9);
-}
-
-.btn-outline {
-  background-color: transparent !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #0f172a !important;
-}
-
-.btn-outline:hover {
-  background-color: #f8fafc !important;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Page Header */
+/* === PAGE HEADER — Royal Banner === */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -195,87 +292,117 @@ body {
 }
 
 .page-header h1 {
-  font-size: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
   font-weight: 700;
   color: #0c5aa4 !important;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(12, 90, 164, 0.1);
+  position: relative;
 }
 
-/* Flex Cards Layout */
-.flex-cards {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-/* Alerts */
+/* === ALERTS — Enchanted Notices === */
 .alert-success {
-  padding: 1rem;
-  background-color: #dcfce7 !important;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #dcfce7, #d1fae5) !important;
   color: #166534 !important;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 1rem;
   border: 1px solid #bbf7d0 !important;
+  font-weight: 500;
 }
 
 .alert-error {
-  padding: 1rem;
-  background-color: #fee2e2 !important;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #fee2e2, #fecaca) !important;
   color: #991b1b !important;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 1rem;
   border: 1px solid #fecaca !important;
+  font-weight: 500;
 }
 
 .alert-info {
-  padding: 1rem;
-  background-color: #eff6ff !important;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #e8f2fc, #dbeafe) !important;
   color: #1d4ed8 !important;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 1rem;
   border: 1px solid #bfdbfe !important;
+  font-weight: 500;
 }
 
-/* Stat Card */
+/* === STAT CARDS — Magical Metrics === */
 .stat-card {
   padding: 1.5rem;
-  background-color: #f8fafc !important;
+  background: var(--gradient-card) !important;
   border-radius: var(--border-radius);
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid rgba(12, 90, 164, 0.08) !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(212, 160, 23, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-card .stat-label {
-  color: #64748b !important;
-  font-size: 0.875rem;
-  font-weight: 600;
+  color: #6b7a99 !important;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .stat-card .stat-value {
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
   font-weight: 700;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
 }
 
-/* Tab Navigation */
+/* === TAB NAVIGATION — Magical Ribbon === */
 .tab-nav {
   display: flex;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 2px solid rgba(12, 90, 164, 0.1) !important;
+  gap: 2px;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 0.75rem 0.5rem;
-  min-height: 44px;
+  padding: 0.8rem 0.5rem;
+  min-height: 46px;
   background: none !important;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   cursor: pointer;
-  font-weight: 400;
-  font-size: 1rem;
-  color: #64748b !important;
-  transition: all 0.15s ease;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  color: #6b7a99 !important;
+  transition: all 0.25s ease;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: #0c5aa4 !important;
+  background: rgba(12, 90, 164, 0.03) !important;
 }
 
 .tab-btn:active {
@@ -284,72 +411,89 @@ body {
 
 .tab-btn.active {
   border-bottom-color: #0c5aa4 !important;
-  font-weight: 700;
-  color: #0f172a !important;
+  font-weight: 800;
+  color: #0c5aa4 !important;
 }
 
-/* Table */
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: #d4a017;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(212, 160, 23, 0.6);
+}
+
+/* === TABLE — Enchanted Scrolls === */
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .table th,
 .table td {
-  padding: 0.75rem;
+  padding: 0.8rem 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0 !important;
-  color: #0f172a !important;
+  border-bottom: 1px solid rgba(12, 90, 164, 0.06) !important;
+  color: #1a1d2e !important;
 }
 
 .table th {
-  font-weight: 600;
-  color: #64748b !important;
+  font-weight: 700;
+  color: #6b7a99 !important;
   text-transform: uppercase;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
 }
 
 .table tbody tr {
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .table tbody tr:hover {
-  background-color: #f8fafc !important;
+  background: linear-gradient(90deg, rgba(12, 90, 164, 0.03), rgba(212, 160, 23, 0.02)) !important;
 }
 
-/* Badge */
+/* === BADGES — Magical Gems === */
 .badge {
   display: inline-block;
-  padding: 0.25rem 0.6rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .badge-active {
-  background-color: #dcfce7 !important;
+  background: linear-gradient(135deg, #dcfce7, #d1fae5) !important;
   color: #166534 !important;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
 }
 
 .badge-used {
-  background-color: #e2e8f0 !important;
+  background: linear-gradient(135deg, #e8ecf2, #dfe4ec) !important;
   color: #475569 !important;
 }
 
 .badge-voided {
-  background-color: #fee2e2 !important;
+  background: linear-gradient(135deg, #fee2e2, #fecaca) !important;
   color: #991b1b !important;
 }
 
-/* Modal */
+/* === MODALS — Magical Portals === */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: rgba(10, 20, 40, 0.6) !important;
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,16 +501,35 @@ body {
 }
 
 .modal {
-  background-color: #ffffff !important;
-  border-radius: var(--border-radius);
+  background: var(--gradient-card) !important;
+  border-radius: 20px;
   padding: 2rem;
   max-width: 420px;
   width: 90%;
-  box-shadow: var(--shadow-lg);
-  color: #0f172a !important;
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(12, 90, 164, 0.1);
+  color: #1a1d2e !important;
+  position: relative;
+  overflow: hidden;
+  animation: modalAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalAppear {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-gold);
 }
 
 .modal h3 {
+  font-family: var(--font-display);
   margin-bottom: 1rem;
 }
 
@@ -380,14 +543,15 @@ body {
   flex: 1;
 }
 
-/* Inline validation error */
+/* === VALIDATION ERROR === */
 .input-error {
   color: #ef4444 !important;
   font-size: 0.8rem;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
+  font-weight: 500;
 }
 
-/* Pagination */
+/* === PAGINATION — Page Turner === */
 .pagination {
   display: flex;
   justify-content: center;
@@ -396,23 +560,24 @@ body {
   margin-top: 1.5rem;
 }
 
-/* Loading Spinner */
+/* === LOADING — Magical Spinner === */
 .loader-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #f8fafc !important;
+  background: var(--gradient-stardust) !important;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e2e8f0 !important;
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(12, 90, 164, 0.15) !important;
   border-top-color: #0c5aa4 !important;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.9s linear infinite;
+  box-shadow: 0 0 15px rgba(12, 90, 164, 0.1);
 }
 
 @keyframes spin {
@@ -424,7 +589,6 @@ body {
   50% { top: 85%; }
 }
 
-/* Inline spinner for buttons */
 .spinner-inline {
   display: inline-block;
   width: 18px;
@@ -441,7 +605,7 @@ body {
   display: inline-block;
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(0,0,0,0.15);
+  border: 2.5px solid rgba(12, 90, 164, 0.15);
   border-top-color: #0c5aa4;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -449,27 +613,33 @@ body {
   margin-right: 0.5rem;
 }
 
-/* Fade-in animation for tab content */
+/* === ANIMATIONS === */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .fade-in {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Skeleton loading */
+/* Stardust shimmer for skeletons */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
 
+@keyframes starShimmer {
+  0% { background-position: -400px 0; opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { background-position: 400px 0; opacity: 0.6; }
+}
+
 .skeleton {
-  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%) !important;
+  background: linear-gradient(90deg, #dfe6f0 25%, #edf2f8 37%, #f5f8fc 50%, #edf2f8 63%, #dfe6f0 75%) !important;
   background-size: 400px 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: 8px;
+  animation: starShimmer 2s ease-in-out infinite;
+  border-radius: 10px;
   color: transparent !important;
   pointer-events: none;
   user-select: none;
@@ -479,52 +649,54 @@ body {
 .skeleton-text {
   height: 14px;
   margin-bottom: 8px;
-  border-radius: 6px;
+  border-radius: 7px;
 }
 
 .skeleton-text-sm {
   height: 11px;
   margin-bottom: 6px;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .skeleton-heading {
   height: 20px;
   margin-bottom: 12px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .skeleton-stat {
   height: 36px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .skeleton-btn {
-  height: 44px;
-  border-radius: var(--border-radius);
+  height: 46px;
+  border-radius: 12px;
 }
 
 .skeleton-row {
   display: flex;
   gap: 0.75rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid rgba(12, 90, 164, 0.04);
 }
 
 .skeleton-circle {
   border-radius: 50%;
 }
 
-/* QR Container - Dark mode safe zone */
+/* === QR CODE ZONE === */
 .qr-container {
   background-color: #ffffff !important;
-  padding: 20px;
-  border-radius: 16px;
+  padding: 22px;
+  border-radius: 18px;
   display: inline-block;
   color-scheme: light !important;
   isolation: isolate;
   filter: none !important;
   -webkit-filter: none !important;
+  box-shadow: 0 4px 20px rgba(12, 90, 164, 0.1);
+  border: 2px solid rgba(12, 90, 164, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -535,14 +707,14 @@ body {
   }
 }
 
-/* QR Fullscreen Modal */
+/* === QR FULLSCREEN === */
 .qr-fullscreen-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ffffff !important;
+  background: linear-gradient(160deg, #f0f4f8, #e8f0fb, #fdf6e3) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -560,6 +732,7 @@ body {
   padding: 2rem;
 }
 
+/* === QR SCANNER === */
 #qr-reader {
   border: none !important;
 }
@@ -582,18 +755,18 @@ body {
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* Magic Club Promo Card */
+/* === MAGIC CLUB PROMO CARD === */
 .mc-tarjeta {
   background-image: url('https://magicstore.com.ar/wp-content/uploads/2026/02/TARJETA-CLIENTES-1.jpg-1-1.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-radius: 15px;
+  border-radius: 18px;
   padding: 10px 20px 30px;
   text-align: center;
   color: white;
-  font-family: 'Montserrat', var(--font-family);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  font-family: var(--font-display), serif;
+  box-shadow: 0 12px 30px rgba(12, 90, 164, 0.2), 0 0 40px rgba(212, 160, 23, 0.1);
   margin: 0 auto 10px auto;
   width: 100%;
   max-width: 650px;
@@ -602,27 +775,38 @@ body {
   overflow: hidden;
 }
 
+.mc-tarjeta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(212, 160, 23, 0.05), transparent, rgba(255,255,255,0.05));
+  pointer-events: none;
+  border-radius: 18px;
+}
+
 .mc-logo-img {
   width: 100%;
   max-width: 280px;
   height: auto;
   margin: 0 auto 10px auto;
   display: block;
-  filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.2));
+  filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.25));
 }
 
 .mc-subtitulo {
   font-size: clamp(1rem, 4vw, 1.4rem);
   margin-bottom: 25px;
-  font-weight: 500;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  font-weight: 600;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.35);
+  letter-spacing: 0.02em;
 }
 
 .mc-info {
   font-size: clamp(0.75rem, 3vw, 0.9rem);
   margin-top: 25px;
-  font-weight: 400;
+  font-weight: 500;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  font-family: var(--font-body);
 }
 
 .mc-estrellas-contenedor {
@@ -646,7 +830,12 @@ body {
   width: 100%;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.15));
+  filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.2));
+  transition: transform 0.3s ease;
+}
+
+.mc-estrella-img:hover {
+  transform: scale(1.1);
 }
 
 .mc-estrella-ganadora-activa {
@@ -655,18 +844,21 @@ body {
   height: auto;
   object-fit: contain;
   animation: mc-latido 1.2s infinite;
+  filter: drop-shadow(0 0 12px rgba(212, 160, 23, 0.5));
 }
 
 .mc-mensaje-premio {
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #ffffff, #fdf6e3);
   color: #0c5aa4;
-  padding: 10px 15px;
-  border-radius: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
   display: inline-block;
   margin-top: 25px;
-  font-weight: bold;
+  font-weight: 800;
   font-size: clamp(0.8rem, 3.4vw, 1rem);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15), 0 0 20px rgba(212, 160, 23, 0.2);
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
 }
 
 .mc-mensaje-animado {
@@ -675,7 +867,7 @@ body {
 
 @keyframes mc-latido {
   0% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  50% { transform: scale(1.04); }
   100% { transform: scale(1); }
 }
 
@@ -685,13 +877,24 @@ body {
   }
 }
 
-/* Responsive column visibility helpers */
+/* === FLEX CARDS === */
+.flex-cards {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+/* === RESPONSIVE HELPERS === */
 .hide-mobile {
   /* visible by default */
 }
 
-/* Responsive */
+/* === RESPONSIVE === */
 @media (max-width: 768px) {
+  body::before {
+    opacity: 0.5;
+  }
+
   .main-content {
     padding: 1rem 0;
   }
@@ -705,7 +908,7 @@ body {
   }
 
   .page-header h1 {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
   }
 
   .stat-card .stat-value {
@@ -725,7 +928,6 @@ body {
     display: none !important;
   }
 
-  /* Modal takes more space on tablet */
   .modal {
     max-width: 95%;
     width: 95%;
@@ -738,8 +940,8 @@ body {
   }
 
   .card {
-    padding: 1rem;
-    border-radius: 10px;
+    padding: 1.1rem;
+    border-radius: 14px;
   }
 
   .main-content {
@@ -751,7 +953,7 @@ body {
   }
 
   .page-header h1 {
-    font-size: 1.15rem;
+    font-size: 1.2rem;
   }
 
   .tab-nav {
@@ -759,16 +961,20 @@ body {
   }
 
   .tab-btn {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     padding: 0.65rem 0.25rem;
   }
 
-  /* Modal goes nearly full-screen on small mobile */
+  .tab-btn.active::after {
+    width: 5px;
+    height: 5px;
+  }
+
   .modal {
     padding: 1.25rem;
     max-width: 100%;
     width: 100%;
-    border-radius: 12px 12px 0 0;
+    border-radius: 16px 16px 0 0;
     max-height: 90vh;
     overflow-y: auto;
   }
@@ -782,7 +988,6 @@ body {
     gap: 0.5rem;
   }
 
-  /* Table compact mode */
   .table {
     font-size: 0.75rem;
   }
@@ -801,23 +1006,19 @@ body {
     padding: 0.2rem 0.4rem;
   }
 
-  /* Stat cards */
   .stat-card .stat-value {
     font-size: 1.25rem;
   }
 
-  /* Pagination compact */
   .pagination {
     gap: 0.5rem;
     flex-wrap: wrap;
   }
 
-  /* QR fullscreen */
   .qr-fullscreen-content {
     padding: 1rem;
   }
 
-  /* Alerts compact */
   .alert-success,
   .alert-error,
   .alert-info {
@@ -825,13 +1026,12 @@ body {
     font-size: 0.9rem;
   }
 
-  /* Input groups tighter */
   .input-group {
     margin-bottom: 0.75rem;
   }
 
   .input-label {
-    font-size: 0.875rem;
+    font-size: 0.78rem;
     margin-bottom: 0.35rem;
   }
 }
@@ -842,7 +1042,7 @@ body {
   }
 
   .card {
-    padding: 0.75rem;
+    padding: 0.85rem;
   }
 
   .tab-btn {
