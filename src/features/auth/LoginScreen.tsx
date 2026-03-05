@@ -134,7 +134,7 @@ export default function LoginScreen() {
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
 
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                <h1 style={{ fontFamily: "'Cinzel', Georgia, serif", fontSize: '2.8rem', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '0.04em', textShadow: '0 2px 8px rgba(12, 90, 164, 0.15)' }}>Magic Club</h1>
+                <h1 style={{ fontSize: 'clamp(2rem, 6vw, 2.8rem)', fontWeight: 700, color: 'var(--color-primary)', letterSpacing: '0.02em', textShadow: '0 2px 8px rgba(12, 90, 164, 0.15)' }}>Magic Club</h1>
                 <p style={{ color: 'var(--color-secondary)', marginTop: '0.5rem', fontWeight: 600, letterSpacing: '0.15em', fontSize: '0.8rem', textTransform: 'uppercase' }}>El programa de lealtad oficial</p>
             </div>
 

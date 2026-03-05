@@ -280,7 +280,7 @@ export default function ClientDashboard() {
             {activeTab === 'purchases' && (
                 <div className="fade-in">
                     {/* Summary Cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
                         <div className="stat-card">
                             <p className="stat-label">Compras Activas</p>
                             <p className="stat-value" style={{ color: 'var(--color-primary)' }}>{active_purchases_count} / 5</p>
@@ -369,7 +369,7 @@ export default function ClientDashboard() {
 
             {activeTab === 'qr' && (
                 <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <h2 style={{ fontFamily: "'Cinzel', Georgia, serif", marginBottom: '0.5rem', width: '100%', textAlign: 'left', fontSize: '1.15rem', letterSpacing: '0.03em' }}>Tu Pase Mágico</h2>
+                    <h2 style={{ marginBottom: '0.5rem', width: '100%', textAlign: 'left', fontSize: '1.15rem' }}>Tu Pase Mágico</h2>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem', width: '100%', textAlign: 'left' }}>
                         Muestra este código en caja para sumar compras o canjear tus premios.
                     </p>
@@ -459,7 +459,7 @@ export default function ClientDashboard() {
                 <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#f8fafc' }} onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
 
-                        <p style={{ fontFamily: "'Cinzel', Georgia, serif", color: 'var(--color-primary)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem', letterSpacing: '0.04em' }}>Tu Pase Mágico</p>
+                        <p style={{ color: 'var(--color-primary)', fontSize: 'clamp(1rem, 4vw, 1.25rem)', fontWeight: 700, marginBottom: '0.25rem', letterSpacing: '0.02em' }}>Tu Pase Mágico</p>
                         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginBottom: '2rem' }}>Mostrá este QR en caja</p>
 
                         <div style={{ padding: '24px', borderRadius: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>

@@ -138,7 +138,7 @@ export default function AdminPanel() {
             {error && <div className="alert-error">{error}</div>}
 
             {/* Stats Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                 {stats ? (
                     <>
                         <div className="stat-card">
