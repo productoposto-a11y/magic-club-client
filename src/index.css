@@ -10,8 +10,8 @@
   color-scheme: light only !important;
 
   /* Color Palette */
-  --color-primary: #6366f1 !important; /* Indigo 500 */
-  --color-primary-hover: #4f46e5 !important;
+  --color-primary: #0c5aa4 !important; /* Indigo 500 */
+  --color-primary-hover: #094a88 !important;
   --color-secondary: #ec4899 !important; /* Pink 500 */
   --color-success: #10b981 !important; /* Emerald 500 */
   --color-danger: #ef4444 !important; /* Red 500 */
@@ -112,12 +112,12 @@ body {
 }
 
 .btn-primary {
-  background-color: #6366f1 !important;
+  background-color: #0c5aa4 !important;
   color: #ffffff !important;
 }
 
 .btn-primary:hover {
-  background-color: #4f46e5 !important;
+  background-color: #094a88 !important;
 }
 
 .btn-success {
@@ -155,7 +155,7 @@ body {
 }
 
 .input-field:focus {
-  border-color: #6366f1 !important;
+  border-color: #0c5aa4 !important;
   outline: none;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
 }
@@ -197,7 +197,7 @@ body {
 .page-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #6366f1 !important;
+  color: #0c5aa4 !important;
 }
 
 /* Flex Cards Layout */
@@ -283,7 +283,7 @@ body {
 }
 
 .tab-btn.active {
-  border-bottom-color: #6366f1 !important;
+  border-bottom-color: #0c5aa4 !important;
   font-weight: 700;
   color: #0f172a !important;
 }
@@ -410,7 +410,7 @@ body {
   width: 40px;
   height: 40px;
   border: 4px solid #e2e8f0 !important;
-  border-top-color: #6366f1 !important;
+  border-top-color: #0c5aa4 !important;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -442,7 +442,7 @@ body {
   width: 18px;
   height: 18px;
   border: 2.5px solid rgba(0,0,0,0.15);
-  border-top-color: #6366f1;
+  border-top-color: #0c5aa4;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   vertical-align: middle;

@@ -249,7 +249,7 @@ export default function ClientDashboard() {
                 <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#f8fafc' }} onClick={() => setQrModalOpen(false)}>
                     <div className="qr-fullscreen-content" onClick={(e) => e.stopPropagation()}>
 
-                        <p style={{ color: '#6366f1', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Tu Pase Mágico</p>
+                        <p style={{ color: '#0c5aa4', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Tu Pase Mágico</p>
                         <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '2rem' }}>Mostrá este QR en caja</p>
 
                         <div style={{ padding: '24px', borderRadius: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
