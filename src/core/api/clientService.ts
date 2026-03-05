@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import type { ClientProfileResponse, Purchase, Reward } from '../types/api';
+import type { ClientProfileResponse, Purchase, Reward, Comment } from '../types/api';
 
 export async function getClientProfile(identifier: string): Promise<ClientProfileResponse> {
   const res = await apiClient.get(`/clients/${identifier}`);
@@ -47,4 +47,14 @@ export async function getClientPurchases(identifier: string): Promise<Purchase[]
 export async function getClientRewards(identifier: string): Promise<Reward[]> {
   const res = await apiClient.get(`/clients/${identifier}/rewards`);
   return res.data.rewards || [];
+}
+
+export async function getMyComments(): Promise<Comment[]> {
+  const res = await apiClient.get('/comments/mine');
+  return res.data.comments || [];
+}
+
+export async function createComment(storeName: string, body: string, rating: number): Promise<Comment> {
+  const res = await apiClient.post('/comments', { store_name: storeName, body, rating });
+  return res.data.comment;
 }

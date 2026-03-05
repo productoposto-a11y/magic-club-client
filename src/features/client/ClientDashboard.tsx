@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { getClientProfile, getClientPurchases, getClientRewards } from '../../core/api/clientService';
-import type { ClientProfileResponse, Purchase, Reward } from '../../core/types/api';
+import { getClientProfile, getClientPurchases, getClientRewards, getMyComments, createComment } from '../../core/api/clientService';
+import type { ClientProfileResponse, Purchase, Reward, Comment } from '../../core/types/api';
 import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSENotifications';
 import { toast } from 'sonner';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -61,8 +61,16 @@ export default function ClientDashboard() {
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<'purchases' | 'qr' | 'promo' | 'locales'>('purchases');
+    const [activeTab, setActiveTab] = useState<'purchases' | 'qr' | 'promo' | 'locales' | 'comments'>('purchases');
     const [qrModalOpen, setQrModalOpen] = useState(false);
+
+    // Comments
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [commentStore, setCommentStore] = useState('');
+    const [commentBody, setCommentBody] = useState('');
+    const [commentRating, setCommentRating] = useState(5);
+    const [submittingComment, setSubmittingComment] = useState(false);
 
     const fetchAllData = useCallback(async () => {
         if (!user?.email) return;
@@ -106,6 +114,33 @@ export default function ClientDashboard() {
 
         return () => { isMounted = false; };
     }, [user?.email]);
+
+    useEffect(() => {
+        if (activeTab === 'comments' && comments.length === 0) {
+            setLoadingComments(true);
+            getMyComments().then(setComments).catch(() => {}).finally(() => setLoadingComments(false));
+        }
+    }, [activeTab]);
+
+    const handleSubmitComment = async () => {
+        if (!commentStore || !commentBody.trim()) {
+            toast.error('Seleccioná una sucursal y escribí tu comentario.');
+            return;
+        }
+        setSubmittingComment(true);
+        try {
+            const newComment = await createComment(commentStore, commentBody.trim(), commentRating);
+            setComments(prev => [newComment, ...prev]);
+            setCommentBody('');
+            setCommentRating(5);
+            setCommentStore('');
+            toast.success('Comentario enviado');
+        } catch {
+            toast.error('Error al enviar el comentario.');
+        } finally {
+            setSubmittingComment(false);
+        }
+    };
 
     const handleSSEEvent = useCallback((event: SSEEventData) => {
         if (event.type === 'purchase_registered') {
@@ -216,6 +251,12 @@ export default function ClientDashboard() {
                         onClick={() => setActiveTab('locales')}
                     >
                         Locales
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('comments')}
+                    >
+                        Opiniones
                     </button>
                 </div>
             </div>
@@ -526,6 +567,102 @@ export default function ClientDashboard() {
                             </div>
                         ))}
                     </div>
+                </div>
+            )}
+
+            {activeTab === 'comments' && (
+                <div className="card fade-in">
+                    <h2 style={{ marginBottom: '1.25rem', fontSize: '1.15rem' }}>Dejanos tu opinión</h2>
+
+                    {/* Comment Form */}
+                    <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div className="input-group" style={{ marginBottom: 0 }}>
+                            <label className="input-label">Sucursal</label>
+                            <select
+                                className="input-field"
+                                value={commentStore}
+                                onChange={(e) => setCommentStore(e.target.value)}
+                            >
+                                <option value="">Seleccionar sucursal...</option>
+                                <option value="Tienda Online">Tienda Online</option>
+                                {STORES.filter(s => !s.tag || s.tag !== 'Próximamente').map((s, i) => (
+                                    <option key={i} value={s.name}>{s.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="input-group" style={{ marginBottom: 0 }}>
+                            <label className="input-label">Calificación</label>
+                            <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                {[1, 2, 3, 4, 5].map(n => (
+                                    <button
+                                        key={n}
+                                        type="button"
+                                        onClick={() => setCommentRating(n)}
+                                        style={{
+                                            background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.1rem',
+                                            color: n <= commentRating ? '#f59e0b' : '#d1d5db',
+                                            transition: 'color 0.15s',
+                                        }}
+                                    >
+                                        ★
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="input-group" style={{ marginBottom: 0 }}>
+                            <label className="input-label">Comentario</label>
+                            <textarea
+                                className="input-field"
+                                rows={3}
+                                placeholder="Contanos tu experiencia..."
+                                value={commentBody}
+                                onChange={(e) => setCommentBody(e.target.value.slice(0, 1000))}
+                                style={{ resize: 'vertical', minHeight: '80px' }}
+                            />
+                            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>{commentBody.length}/1000</span>
+                        </div>
+
+                        <button
+                            className="btn btn-primary"
+                            onClick={handleSubmitComment}
+                            disabled={submittingComment}
+                            style={{ alignSelf: 'flex-start' }}
+                        >
+                            {submittingComment ? 'Enviando...' : 'Enviar opinión'}
+                        </button>
+                    </div>
+
+                    {/* My Comments List */}
+                    {loadingComments ? (
+                        <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: '60px', marginBottom: '0.5rem', borderRadius: '8px' }}></div>)}</div>
+                    ) : comments.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '1rem 0' }}>Aún no dejaste ninguna opinión.</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {comments.map(c => (
+                                <div key={c.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                                        <strong style={{ fontSize: '0.85rem' }}>{c.store_name}</strong>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                            {new Date(c.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>
+                                        {'★'.repeat(c.rating)}{'☆'.repeat(5 - c.rating)}
+                                    </div>
+                                    <p style={{ fontSize: '0.85rem', margin: 0 }}>{c.body}</p>
+                                    {c.admin_reply && (
+                                        <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: '#eff6ff', borderRadius: '8px', borderLeft: '3px solid var(--color-primary)' }}>
+                                            <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', margin: '0 0 0.2rem 0' }}>Respuesta de Magic Club</p>
+                                            <p style={{ fontSize: '0.8rem', margin: 0 }}>{c.admin_reply}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

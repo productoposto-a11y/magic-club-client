@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { getAdminStats, getAdminClients, getAdminTopClients, getAdminTimeStats } from '../../core/api/adminService';
+import { getAdminStats, getAdminClients, getAdminTopClients, getAdminTimeStats, getAdminComments, replyToComment, deleteComment } from '../../core/api/adminService';
 import { apiClient } from '../../core/api/axios';
-import type { AdminStats, ClientListItem, TimeStat } from '../../core/types/api';
+import type { AdminStats, ClientListItem, TimeStat, CommentWithEmail } from '../../core/types/api';
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function AdminPanel() {
     const { logout, loggingOut } = useAuth();
 
-    const [activeTab, setActiveTab] = useState<'clients' | 'ranking' | 'stats'>('clients');
+    const [activeTab, setActiveTab] = useState<'clients' | 'ranking' | 'stats' | 'comments'>('clients');
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [clients, setClients] = useState<ClientListItem[]>([]);
     const [totalRecords, setTotalRecords] = useState(0);
@@ -25,6 +25,14 @@ export default function AdminPanel() {
     const [timeStats, setTimeStats] = useState<TimeStat[]>([]);
     const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
     const [loadingTime, setLoadingTime] = useState(false);
+
+    // Comments
+    const [adminComments, setAdminComments] = useState<CommentWithEmail[]>([]);
+    const [commentsTotal, setCommentsTotal] = useState(0);
+    const [commentsPage, setCommentsPage] = useState(1);
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);
+    const [replyText, setReplyText] = useState('');
 
     const pageSize = 20;
 
@@ -69,6 +77,37 @@ export default function AdminPanel() {
             getAdminTimeStats(timePeriod).then(d => setTimeStats(d.stats)).catch(() => {}).finally(() => setLoadingTime(false));
         }
     }, [activeTab, timePeriod]);
+
+    useEffect(() => {
+        if (activeTab === 'comments') {
+            setLoadingComments(true);
+            getAdminComments(commentsPage, pageSize)
+                .then(data => { setAdminComments(data.comments || []); setCommentsTotal(data.metadata.total_records); })
+                .catch(() => {})
+                .finally(() => setLoadingComments(false));
+        }
+    }, [activeTab, commentsPage]);
+
+    const commentsTotalPages = Math.ceil(commentsTotal / pageSize);
+
+    const handleReply = async (commentId: string) => {
+        if (!replyText.trim()) return;
+        try {
+            await replyToComment(commentId, replyText.trim());
+            setAdminComments(prev => prev.map(c => c.id === commentId ? { ...c, admin_reply: replyText.trim(), replied_at: new Date().toISOString() } : c));
+            setReplyingTo(null);
+            setReplyText('');
+        } catch { /* silent */ }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        if (!confirm('¿Eliminar este comentario?')) return;
+        try {
+            await deleteComment(commentId);
+            setAdminComments(prev => prev.filter(c => c.id !== commentId));
+            setCommentsTotal(prev => prev - 1);
+        } catch { /* silent */ }
+    };
 
     const totalPages = Math.ceil(totalRecords / pageSize);
 
@@ -145,6 +184,7 @@ export default function AdminPanel() {
                     <button className={`tab-btn ${activeTab === 'clients' ? 'active' : ''}`} onClick={() => setActiveTab('clients')}>Clientes</button>
                     <button className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>Ranking</button>
                     <button className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>Estadísticas</button>
+                    <button className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`} onClick={() => setActiveTab('comments')}>Opiniones</button>
                 </div>
             </div>
 
@@ -289,6 +329,92 @@ export default function AdminPanel() {
                                 </div>
                             ))}
                         </div>
+                    )}
+                </div>
+            )}
+
+            {/* Comments Tab */}
+            {activeTab === 'comments' && (
+                <div className="card fade-in">
+                    <h2 style={{ marginBottom: '1.5rem' }}>Opiniones de Clientes</h2>
+
+                    {loadingComments ? (
+                        <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: '80px', marginBottom: '0.75rem', borderRadius: '8px' }}></div>)}</div>
+                    ) : adminComments.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>No hay opiniones aún.</p>
+                    ) : (
+                        <>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {adminComments.map(c => (
+                                    <div key={c.id} style={{ padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                                            <div>
+                                                <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{c.client_email}</span>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>{c.store_name}</span>
+                                            </div>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+                                                {new Date(c.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>
+                                            {'★'.repeat(c.rating)}{'☆'.repeat(5 - c.rating)}
+                                        </div>
+                                        <p style={{ fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>{c.body}</p>
+
+                                        {c.admin_reply && (
+                                            <div style={{ padding: '0.5rem 0.75rem', backgroundColor: '#eff6ff', borderRadius: '8px', borderLeft: '3px solid var(--color-primary)', marginBottom: '0.5rem' }}>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', margin: '0 0 0.2rem 0' }}>Tu respuesta</p>
+                                                <p style={{ fontSize: '0.8rem', margin: 0 }}>{c.admin_reply}</p>
+                                            </div>
+                                        )}
+
+                                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                            {replyingTo === c.id ? (
+                                                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                                    <textarea
+                                                        className="input-field"
+                                                        rows={2}
+                                                        placeholder="Escribí tu respuesta..."
+                                                        value={replyText}
+                                                        onChange={(e) => setReplyText(e.target.value.slice(0, 1000))}
+                                                        style={{ resize: 'vertical', fontSize: '0.8rem' }}
+                                                    />
+                                                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                                        <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '0.3rem 0.75rem', minHeight: 'unset' }} onClick={() => handleReply(c.id)}>Enviar</button>
+                                                        <button className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '0.3rem 0.75rem', minHeight: 'unset' }} onClick={() => { setReplyingTo(null); setReplyText(''); }}>Cancelar</button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        style={{ fontSize: '0.7rem', padding: '0.25rem 0.6rem', minHeight: 'unset' }}
+                                                        onClick={() => { setReplyingTo(c.id); setReplyText(c.admin_reply || ''); }}
+                                                    >
+                                                        {c.admin_reply ? 'Editar respuesta' : 'Responder'}
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-outline"
+                                                        style={{ fontSize: '0.7rem', padding: '0.25rem 0.6rem', minHeight: 'unset', color: '#dc2626', borderColor: '#dc2626' }}
+                                                        onClick={() => handleDeleteComment(c.id)}
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {commentsTotalPages > 1 && (
+                                <div className="pagination" style={{ marginTop: '1rem' }}>
+                                    <button className="btn btn-outline" disabled={commentsPage <= 1} onClick={() => setCommentsPage(p => p - 1)}>Anterior</button>
+                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Página {commentsPage} de {commentsTotalPages}</span>
+                                    <button className="btn btn-outline" disabled={commentsPage >= commentsTotalPages} onClick={() => setCommentsPage(p => p + 1)}>Siguiente</button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}

@@ -95,6 +95,30 @@ export interface TimeStat {
   total: number;
 }
 
+export interface Comment {
+  id: string;
+  client_id: string;
+  store_name: string;
+  body: string;
+  rating: number;
+  admin_reply?: string;
+  replied_at?: string;
+  created_at: string;
+}
+
+export interface CommentWithEmail extends Comment {
+  client_email: string;
+}
+
+export interface PaginatedComments {
+  comments: CommentWithEmail[];
+  metadata: {
+    current_page: number;
+    page_size: number;
+    total_records: number;
+  };
+}
+
 export interface StorePurchasesResponse {
   purchases: StorePurchaseItem[];
   summary: {

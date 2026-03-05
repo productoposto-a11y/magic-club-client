@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import type { AdminStats, PaginatedClients, ClientListItem, TimeStat } from '../types/api';
+import type { AdminStats, PaginatedClients, ClientListItem, TimeStat, PaginatedComments } from '../types/api';
 
 export async function getAdminStats(): Promise<AdminStats> {
   const res = await apiClient.get('/admin/stats');
@@ -29,4 +29,17 @@ export function getExportClientsURL(): string {
 
 export function getExportPurchasesURL(): string {
   return `${apiClient.defaults.baseURL}/admin/export/purchases`;
+}
+
+export async function getAdminComments(page = 1, pageSize = 20): Promise<PaginatedComments> {
+  const res = await apiClient.get('/admin/comments', { params: { page, page_size: pageSize } });
+  return res.data;
+}
+
+export async function replyToComment(commentId: string, reply: string): Promise<void> {
+  await apiClient.patch(`/admin/comments/${commentId}/reply`, { reply });
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  await apiClient.delete(`/admin/comments/${commentId}`);
 }
