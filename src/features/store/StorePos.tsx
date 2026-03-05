@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getClientProfile, createPurchase, redeemReward } from '../../core/api/clientService';
 import { getStoreStats, getStorePurchases, voidPurchase } from '../../core/api/storeService';
 import { extractApiError } from '../../core/api/errors';
 import type { ClientProfileResponse, StoreStats, StorePurchaseItem } from '../../core/types/api';
-import BarcodeScannerComponent from 'react-qr-barcode-scanner';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface ConfirmAction {
     type: 'purchase' | 'purchase_and_redeem';
@@ -18,6 +18,90 @@ interface TxSummary {
 }
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function QrScannerModal({ onScan, onClose }: { onScan: (text: string) => void; onClose: () => void }) {
+    const scannerRef = useRef<Html5Qrcode | null>(null);
+    const hasScanned = useRef(false);
+
+    const stopScanner = useCallback(async () => {
+        try {
+            const scanner = scannerRef.current;
+            if (scanner) {
+                scannerRef.current = null;
+                const state = scanner.getState();
+                if (state === 2 || state === 3) {
+                    await scanner.stop();
+                }
+                scanner.clear();
+            }
+        } catch { /* ignore cleanup errors */ }
+    }, []);
+
+    useEffect(() => {
+        const scanner = new Html5Qrcode('qr-reader', { verbose: false });
+        scannerRef.current = scanner;
+
+        scanner.start(
+            { facingMode: 'environment' },
+            {
+                fps: 15,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1,
+                disableFlip: false,
+            },
+            (decodedText) => {
+                if (hasScanned.current) return;
+                hasScanned.current = true;
+                onScan(decodedText);
+            },
+            () => { /* ignore scan failures */ },
+        ).catch(() => { /* camera access denied or not available */ });
+
+        return () => { stopScanner(); };
+    }, [onScan, stopScanner]);
+
+    return (
+        <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#000000' }}>
+            <div className="qr-fullscreen-content" style={{ padding: 0 }}>
+                <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+
+                    {/* Header */}
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+                        padding: 'max(1.5rem, env(safe-area-inset-top, 1rem)) 1.5rem 1rem',
+                        textAlign: 'center',
+                    }}>
+                        <p style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: 700 }}>Escaneá el código QR</p>
+                        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Apuntá la cámara al QR del cliente</p>
+                    </div>
+
+                    {/* Camera feed */}
+                    <div id="qr-reader" style={{ width: '100%', height: '100%' }} />
+
+                    {/* Close button */}
+                    <button
+                        onClick={() => { stopScanner().then(onClose); }}
+                        className="btn btn-outline"
+                        style={{
+                            position: 'absolute',
+                            bottom: 'max(2rem, env(safe-area-inset-bottom, 1rem))',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            backgroundColor: 'rgba(255,255,255,0.9)',
+                            fontSize: '1rem',
+                            padding: '0.85rem 2rem',
+                            borderRadius: '50px',
+                            minWidth: '170px',
+                            zIndex: 10,
+                        }}
+                    >
+                        Cerrar Escáner
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function StorePos() {
     const { user, logout, loggingOut } = useAuth();
@@ -581,72 +665,13 @@ export default function StorePos() {
 
             {/* QR Scanner Fullscreen Modal */}
             {scannerActive && (
-                <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#000000' }}>
-                    <div className="qr-fullscreen-content" style={{ padding: 0 }}>
-                        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-
-                            {/* Header */}
-                            <div style={{
-                                position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-                                padding: 'max(1.5rem, env(safe-area-inset-top, 1rem)) 1.5rem 1rem',
-                                textAlign: 'center',
-                            }}>
-                                <p style={{ color: '#ffffff', fontSize: '1.1rem', fontWeight: 700 }}>Escaneá el código QR</p>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Apuntá la cámara al QR del cliente</p>
-                            </div>
-
-                            {/* Camera feed */}
-                            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                                <BarcodeScannerComponent
-                                    width="100%"
-                                    height="100%"
-                                    onUpdate={(err, result) => {
-                                        if (err) { /* ignore */ }
-                                        if (result) {
-                                            setScannerActive(false);
-                                            fetchClient(result.getText());
-                                        }
-                                    }}
-                                />
-                                {/* Scan frame */}
-                                <div style={{
-                                    position: 'absolute', top: '50%', left: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    width: 'min(240px, 60vw)', height: 'min(240px, 60vw)',
-                                    border: '2px solid rgba(255,255,255,0.6)',
-                                    borderRadius: '16px',
-                                    pointerEvents: 'none',
-                                }}>
-                                    {/* Scan line */}
-                                    <div style={{
-                                        position: 'absolute', left: 16, right: 16, height: 2,
-                                        backgroundColor: '#6366f1', borderRadius: 2, opacity: 0.7,
-                                        animation: 'scanLine 2s ease-in-out infinite',
-                                    }} />
-                                </div>
-                            </div>
-
-                            {/* Close button */}
-                            <button
-                                onClick={() => setScannerActive(false)}
-                                className="btn btn-outline"
-                                style={{
-                                    position: 'absolute',
-                                    bottom: 'max(2rem, env(safe-area-inset-bottom, 1rem))',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    backgroundColor: 'rgba(255,255,255,0.9)',
-                                    fontSize: '1rem',
-                                    padding: '0.85rem 2rem',
-                                    borderRadius: '50px',
-                                    minWidth: '170px',
-                                }}
-                            >
-                                Cerrar Escáner
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <QrScannerModal
+                    onScan={(text) => {
+                        setScannerActive(false);
+                        fetchClient(text);
+                    }}
+                    onClose={() => setScannerActive(false)}
+                />
             )}
 
             {/* Confirmation Modal */}
