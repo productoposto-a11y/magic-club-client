@@ -9,6 +9,24 @@ import { extractApiError } from '../../core/api/errors';
 
 const EMAIL_RX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
+function validateCUIL(raw: string): boolean {
+    const cuil = raw.replace(/-/g, '');
+    if (!/^\d{11}$/.test(cuil)) return false;
+    const multipliers = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+    let sum = 0;
+    for (let i = 0; i < 10; i++) sum += parseInt(cuil[i]) * multipliers[i];
+    const remainder = sum % 11;
+    const expected = remainder === 0 ? 0 : remainder === 1 ? 9 : 11 - remainder;
+    return parseInt(cuil[10]) === expected;
+}
+
+function formatCUIL(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 10) return digits.slice(0, 2) + '-' + digits.slice(2);
+    return digits.slice(0, 2) + '-' + digits.slice(2, 10) + '-' + digits.slice(10);
+}
+
 export default function LoginScreen() {
     const { user, loginWithTokens } = useAuth();
     const navigate = useNavigate();
@@ -28,6 +46,8 @@ export default function LoginScreen() {
     const [regConfirmPassword, setRegConfirmPassword] = useState('');
     const [showRegPassword, setShowRegPassword] = useState(false);
     const [regDni, setRegDni] = useState('');
+    const [regBirthday, setRegBirthday] = useState('');
+    const [regReferral, setRegReferral] = useState('');
     const [loadingReg, setLoadingReg] = useState(false);
     const [successReg, setSuccessReg] = useState('');
     const [errorReg, setErrorReg] = useState('');
@@ -60,8 +80,13 @@ export default function LoginScreen() {
         e.preventDefault();
         setErrorLogin('');
 
-        if (!loginDni || !/^\d+$/.test(loginDni)) {
-            setErrorLogin('Ingresa un DNI válido (solo números).');
+        const cleanCuil = loginDni.replace(/-/g, '');
+        if (!cleanCuil || !/^\d{11}$/.test(cleanCuil)) {
+            setErrorLogin('Ingresá un CUIL válido de 11 dígitos.');
+            return;
+        }
+        if (!validateCUIL(cleanCuil)) {
+            setErrorLogin('El CUIL ingresado no es válido. Verificá los números.');
             return;
         }
         if (loginPassword.length < 8) {
@@ -72,10 +97,10 @@ export default function LoginScreen() {
         setLoadingLogin(true);
 
         try {
-            const data = await loginWithDNI(loginDni, loginPassword);
+            const data = await loginWithDNI(cleanCuil, loginPassword);
             processAuthResponse(data, '/client');
         } catch (err: any) {
-            setErrorLogin(extractApiError(err, 'Credenciales incorrectas. Verifica tu DNI y contraseña.'));
+            setErrorLogin(extractApiError(err, 'Credenciales incorrectas. Verificá tu CUIL y contraseña.'));
         } finally {
             setLoadingLogin(false);
         }
@@ -97,8 +122,13 @@ export default function LoginScreen() {
             setErrorReg('Las contraseñas no coinciden.');
             return;
         }
-        if (!regDni || !/^\d+$/.test(regDni)) {
-            setErrorReg('El DNI es obligatorio y debe contener solo números.');
+        const cleanCuil = regDni.replace(/-/g, '');
+        if (!cleanCuil || !/^\d{11}$/.test(cleanCuil)) {
+            setErrorReg('El CUIL es obligatorio y debe tener 11 dígitos.');
+            return;
+        }
+        if (!validateCUIL(cleanCuil)) {
+            setErrorReg('El CUIL ingresado no es válido. Verificá los números.');
             return;
         }
 
@@ -106,9 +136,9 @@ export default function LoginScreen() {
         setSuccessReg('');
 
         try {
-            await registerClient(regEmail, regPassword, regDni);
-            setSuccessReg('¡Cuenta creada con éxito! Ahora puedes iniciar sesión con tu DNI.');
-            setLoginDni(regDni);
+            await registerClient(regEmail, regPassword, cleanCuil, regBirthday || undefined, regReferral || undefined);
+            setSuccessReg('¡Cuenta creada con éxito! Ahora podés iniciar sesión con tu CUIL.');
+            setLoginDni(formatCUIL(cleanCuil));
             setTimeout(() => setActiveTab('login'), 2000);
         } catch (err: any) {
             setErrorReg(extractApiError(err, 'Error al crear la cuenta.'));
@@ -145,13 +175,14 @@ export default function LoginScreen() {
                 {activeTab === 'login' ? (
                     <form onSubmit={handleLogin}>
                         <div className="input-group">
-                            <label className="input-label">Tu DNI</label>
+                            <label className="input-label">Tu CUIL</label>
                             <input
                                 type="text"
                                 className="input-field"
-                                placeholder="Ej. 35123456"
+                                placeholder="Ej. 20-35123456-9"
                                 value={loginDni}
-                                onChange={(e) => setLoginDni(e.target.value)}
+                                onChange={(e) => setLoginDni(formatCUIL(e.target.value))}
+                                inputMode="numeric"
                                 required
                             />
                         </div>
@@ -239,14 +270,41 @@ export default function LoginScreen() {
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">DNI</label>
+                            <label className="input-label">CUIL</label>
                             <input
                                 type="text"
                                 className="input-field"
-                                placeholder="Ej. 35123456"
+                                placeholder="Ej. 20-35123456-9"
                                 value={regDni}
-                                onChange={(e) => setRegDni(e.target.value)}
+                                onChange={(e) => setRegDni(formatCUIL(e.target.value))}
+                                inputMode="numeric"
                                 required
+                            />
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
+                                Podés consultarlo en <a href="https://www.anses.gob.ar/consulta/constancia-de-cuil" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>ANSES</a>
+                            </p>
+                        </div>
+
+                        <div className="input-group">
+                            <label className="input-label">Fecha de Nacimiento <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(opcional)</span></label>
+                            <input
+                                type="date"
+                                className="input-field"
+                                value={regBirthday}
+                                onChange={(e) => setRegBirthday(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="input-group">
+                            <label className="input-label">Código de Referido <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(opcional)</span></label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Ej. A3F7K2"
+                                value={regReferral}
+                                onChange={(e) => setRegReferral(e.target.value.toUpperCase().slice(0, 6))}
+                                maxLength={6}
+                                style={{ textTransform: 'uppercase', letterSpacing: '2px' }}
                             />
                         </div>
 

@@ -163,6 +163,23 @@ export default function ClientDashboard() {
     const { client, status } = clientData;
     const { active_purchases_count, reward_available, available_discount } = status;
 
+    const totalSaved = rewards.reduce((acc, r) => acc + r.amount_discounted, 0);
+
+    const getDaysRemaining = (p: Purchase): number | null => {
+        const created = new Date(p.created_at);
+        const expires = new Date(created.getTime() + 90 * 24 * 60 * 60 * 1000);
+        const now = new Date();
+        const diff = Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return diff > 0 ? diff : 0;
+    };
+
+    const copyReferralCode = () => {
+        if (client.referral_code) {
+            navigator.clipboard.writeText(client.referral_code);
+            toast.success('Código copiado al portapapeles');
+        }
+    };
+
     return (
         <div className="container" style={{ paddingBottom: '2rem' }}>
 
@@ -205,62 +222,92 @@ export default function ClientDashboard() {
 
             {/* Tab Content */}
             {activeTab === 'purchases' && (
-                <div className="card fade-in">
-                    <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mis Compras</h2>
-                    {purchases.length === 0 ? (
-                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no tienes compras registradas.</p>
-                    ) : (
-                        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th className="hide-mobile">Pedido</th>
-                                        <th>Fecha</th>
-                                        <th>Monto</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {purchases.map((p) => (
-                                        <tr key={p.id}>
-                                            <td className="hide-mobile" style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{new Date(p.created_at).toLocaleDateString()}</td>
-                                            <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(p.amount)}</td>
-                                            <td>
-                                                <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
-                                                    {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                <div className="fade-in">
+                    {/* Summary Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <div className="stat-card">
+                            <p className="stat-label">Compras Activas</p>
+                            <p className="stat-value" style={{ color: 'var(--color-primary)' }}>{active_purchases_count} / 5</p>
                         </div>
-                    )}
+                        <div className="stat-card">
+                            <p className="stat-label">Total Compras</p>
+                            <p className="stat-value" style={{ color: 'var(--color-text)' }}>{purchases.length}</p>
+                        </div>
+                        <div className="stat-card">
+                            <p className="stat-label">Premios Canjeados</p>
+                            <p className="stat-value" style={{ color: 'var(--color-success)' }}>{rewards.length}</p>
+                        </div>
+                        <div className="stat-card">
+                            <p className="stat-label">Total Ahorrado</p>
+                            <p className="stat-value" style={{ color: 'var(--color-secondary)' }}>{fmtPrice(totalSaved)}</p>
+                        </div>
+                    </div>
 
-                    {rewards.length > 0 && (
-                        <>
-                            <h3 style={{ marginTop: '1.5rem', marginBottom: '0.75rem', fontSize: '1rem' }}>Premios Canjeados</h3>
+                    <div className="card">
+                        <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mis Compras</h2>
+                        {purchases.length === 0 ? (
+                            <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>Aún no tienes compras registradas.</p>
+                        ) : (
                             <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                                 <table className="table">
                                     <thead>
                                         <tr>
+                                            <th className="hide-mobile">Pedido</th>
                                             <th>Fecha</th>
-                                            <th>Descuento</th>
+                                            <th>Monto</th>
+                                            <th>Estado</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {rewards.map((r) => (
-                                            <tr key={r.id}>
-                                                <td style={{ whiteSpace: 'nowrap' }}>{new Date(r.created_at).toLocaleDateString()}</td>
-                                                <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(r.amount_discounted)}</td>
-                                            </tr>
-                                        ))}
+                                        {purchases.map((p) => {
+                                            const daysLeft = p.status === 'active' ? getDaysRemaining(p) : null;
+                                            return (
+                                                <tr key={p.id}>
+                                                    <td className="hide-mobile" style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{p.order_id}</td>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>{new Date(p.created_at).toLocaleDateString()}</td>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(p.amount)}</td>
+                                                    <td>
+                                                        <span className={`badge ${p.status === 'active' ? 'badge-active' : p.status === 'voided' ? 'badge-voided' : 'badge-used'}`}>
+                                                            {p.status === 'active' ? 'Activa' : p.status === 'voided' ? 'Anulada' : 'Usada'}
+                                                        </span>
+                                                        {daysLeft !== null && (
+                                                            <span style={{ display: 'block', fontSize: '0.65rem', color: daysLeft <= 15 ? '#dc2626' : 'var(--color-text-muted)', marginTop: '0.2rem' }}>
+                                                                {daysLeft === 0 ? 'Vence hoy' : `Vence en ${daysLeft}d`}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
-                        </>
-                    )}
+                        )}
+
+                        {rewards.length > 0 && (
+                            <>
+                                <h3 style={{ marginTop: '1.5rem', marginBottom: '0.75rem', fontSize: '1rem' }}>Premios Canjeados</h3>
+                                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                                    <table className="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Descuento</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {rewards.map((r) => (
+                                                <tr key={r.id}>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(r.amount_discounted)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -281,7 +328,7 @@ export default function ClientDashboard() {
 
                     {client.dni && (
                         <p style={{ marginTop: '1rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                            DNI: {client.dni}
+                            CUIL: {client.dni}
                         </p>
                     )}
 
@@ -292,6 +339,62 @@ export default function ClientDashboard() {
                     >
                         Abrir QR en pantalla completa
                     </button>
+
+                    {/* Profile Info */}
+                    <div style={{ width: '100%', marginTop: '1.5rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--color-text-muted)' }}>Email</span>
+                                <span style={{ fontWeight: 500 }}>{client.email}</span>
+                            </div>
+                            {client.birthday && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ color: 'var(--color-text-muted)' }}>Cumpleaños</span>
+                                    <span style={{ fontWeight: 500 }}>{new Date(client.birthday + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}</span>
+                                </div>
+                            )}
+                            {client.referral_code && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: 'var(--color-text-muted)' }}>Tu código de referido</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span style={{ fontWeight: 700, letterSpacing: '2px', fontFamily: 'monospace', fontSize: '0.95rem', color: 'var(--color-primary)' }}>{client.referral_code}</span>
+                                        <button
+                                            type="button"
+                                            onClick={copyReferralCode}
+                                            className="btn btn-outline"
+                                            style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', minHeight: 'unset' }}
+                                        >
+                                            Copiar
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            {client.referred_by && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ color: 'var(--color-text-muted)' }}>Referido por</span>
+                                    <span style={{ fontWeight: 500, fontFamily: 'monospace' }}>{client.referred_by}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {client.referral_code && (
+                            <button
+                                className="btn btn-outline"
+                                style={{ width: '100%', marginTop: '1rem', fontSize: '0.85rem' }}
+                                onClick={() => {
+                                    const text = `Unite a Magic Club con mi código ${client.referral_code} y empezá a ganar premios.`;
+                                    if (navigator.share) {
+                                        navigator.share({ title: 'Magic Club', text });
+                                    } else {
+                                        navigator.clipboard.writeText(text);
+                                        toast.success('Texto copiado para compartir');
+                                    }
+                                }}
+                            >
+                                Compartir mi código
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -309,7 +412,7 @@ export default function ClientDashboard() {
 
                         {client.dni && (
                             <p style={{ marginTop: '1.25rem', fontWeight: 600, letterSpacing: '3px', fontSize: '1rem', color: '#0f172a' }}>
-                                DNI: {client.dni}
+                                CUIL: {client.dni}
                             </p>
                         )}
 

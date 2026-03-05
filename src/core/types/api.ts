@@ -4,6 +4,9 @@ export interface ClientInfo {
   email: string;
   dni?: string;
   qr_code?: string;
+  birthday?: string;
+  referral_code?: string;
+  referred_by?: string;
   created_at: string;
 }
 
@@ -84,6 +87,12 @@ export interface StorePurchaseItem {
   amount: number;
   status: 'active' | 'used' | 'voided';
   created_at: string;
+}
+
+export interface TimeStat {
+  period: string;
+  count: number;
+  total: number;
 }
 
 export interface StorePurchasesResponse {
