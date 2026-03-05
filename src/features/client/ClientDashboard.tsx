@@ -274,7 +274,7 @@ export default function ClientDashboard() {
             )}
 
             {activeTab === 'promo' && (
-                <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <div className="mc-tarjeta">
                         <img
                             src="https://magicstore.com.ar/wp-content/uploads/2026/02/logo_club-scaled.png"
