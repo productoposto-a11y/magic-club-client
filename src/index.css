@@ -10,8 +10,8 @@
   color-scheme: light only !important;
 
   /* Color Palette */
-  --color-primary: #0c5aa4 !important; /* Indigo 500 */
-  --color-primary-hover: #094a88 !important;
+  --color-primary: #0c5aa4 !important; /* Blue 700 */
+  --color-primary-hover: #094a87 !important;
   --color-secondary: #ec4899 !important; /* Pink 500 */
   --color-success: #10b981 !important; /* Emerald 500 */
   --color-danger: #ef4444 !important; /* Red 500 */
@@ -117,7 +117,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #094a88 !important;
+  background-color: #094a87 !important;
 }
 
 .btn-success {
@@ -157,7 +157,7 @@ body {
 .input-field:focus {
   border-color: #0c5aa4 !important;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 0 0 3px rgba(12, 90, 164, 0.2) !important;
 }
 
 /* Button Variants */
