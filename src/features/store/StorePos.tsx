@@ -38,16 +38,23 @@ function QrScannerModal({ onScan, onClose }: { onScan: (text: string) => void; o
     }, []);
 
     useEffect(() => {
-        const scanner = new Html5Qrcode('qr-reader', { verbose: false });
+        const scanner = new Html5Qrcode('qr-reader', {
+            verbose: false,
+            useBarCodeDetectorIfSupported: true, // Native BarcodeDetector API (hardware-accelerated on Chrome/Android)
+        });
         scannerRef.current = scanner;
 
         scanner.start(
-            { facingMode: 'environment' },
+            { facingMode: { exact: 'environment' } },
             {
-                fps: 15,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1,
-                disableFlip: false,
+                fps: 30,
+                qrbox: { width: 200, height: 200 },
+                disableFlip: true,
+                videoConstraints: {
+                    facingMode: { exact: 'environment' },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                },
             },
             (decodedText) => {
                 if (hasScanned.current) return;
@@ -55,7 +62,23 @@ function QrScannerModal({ onScan, onClose }: { onScan: (text: string) => void; o
                 onScan(decodedText);
             },
             () => { /* ignore scan failures */ },
-        ).catch(() => { /* camera access denied or not available */ });
+        ).catch(() => {
+            // Fallback: some devices don't support exact facingMode
+            scanner.start(
+                { facingMode: 'environment' },
+                {
+                    fps: 30,
+                    qrbox: { width: 200, height: 200 },
+                    disableFlip: true,
+                },
+                (decodedText) => {
+                    if (hasScanned.current) return;
+                    hasScanned.current = true;
+                    onScan(decodedText);
+                },
+                () => {},
+            ).catch(() => { /* camera not available */ });
+        });
 
         return () => { stopScanner(); };
     }, [onScan, stopScanner]);
