@@ -5,6 +5,7 @@ import type { ClientProfileResponse, Purchase, Reward, Comment, CommentWithEmail
 import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSENotifications';
 import { toast } from 'sonner';
 import { QRCodeCanvas } from 'qrcode.react';
+import TabNav from '../../components/TabNav';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -241,40 +242,17 @@ export default function ClientDashboard() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="card" style={{ marginBottom: '1rem' }}>
-                <div className="tab-nav">
-                    <button
-                        className={`tab-btn ${activeTab === 'purchases' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('purchases')}
-                    >
-                        Compras
-                    </button>
-                    <button
-                        className={`tab-btn ${activeTab === 'qr' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('qr')}
-                    >
-                        Mi QR
-                    </button>
-                    <button
-                        className={`tab-btn ${activeTab === 'promo' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('promo')}
-                    >
-                        Promo
-                    </button>
-                    <button
-                        className={`tab-btn ${activeTab === 'locales' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('locales')}
-                    >
-                        Locales
-                    </button>
-                    <button
-                        className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('comments')}
-                    >
-                        Opiniones
-                    </button>
-                </div>
-            </div>
+            <TabNav
+                tabs={[
+                    { key: 'purchases', label: 'Compras' },
+                    { key: 'qr', label: 'Mi QR' },
+                    { key: 'promo', label: 'Promo' },
+                    { key: 'locales', label: 'Locales' },
+                    { key: 'comments', label: 'Opiniones' },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(key) => setActiveTab(key as typeof activeTab)}
+            />
 
             {/* Tab Content */}
             {activeTab === 'purchases' && (

@@ -3,6 +3,7 @@ import { useAuth } from '../../core/auth/AuthContext';
 import { getAdminStats, getAdminClients, getAdminTopClients, getAdminTimeStats, getAdminComments, replyToComment, deleteComment } from '../../core/api/adminService';
 import { apiClient } from '../../core/api/axios';
 import type { AdminStats, ClientListItem, TimeStat, CommentWithEmail } from '../../core/types/api';
+import TabNav from '../../components/TabNav';
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -179,14 +180,16 @@ export default function AdminPanel() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <div className="tab-nav">
-                    <button className={`tab-btn ${activeTab === 'clients' ? 'active' : ''}`} onClick={() => setActiveTab('clients')}>Clientes</button>
-                    <button className={`tab-btn ${activeTab === 'ranking' ? 'active' : ''}`} onClick={() => setActiveTab('ranking')}>Ranking</button>
-                    <button className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>Estadísticas</button>
-                    <button className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`} onClick={() => setActiveTab('comments')}>Opiniones</button>
-                </div>
-            </div>
+            <TabNav
+                tabs={[
+                    { key: 'clients', label: 'Clientes' },
+                    { key: 'ranking', label: 'Ranking' },
+                    { key: 'stats', label: 'Estadísticas' },
+                    { key: 'comments', label: 'Opiniones' },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(key) => setActiveTab(key as typeof activeTab)}
+            />
 
             {/* Clients Tab */}
             {activeTab === 'clients' && (

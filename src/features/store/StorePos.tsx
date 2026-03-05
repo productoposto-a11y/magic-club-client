@@ -5,6 +5,7 @@ import { getStoreStats, getStorePurchases, voidPurchase } from '../../core/api/s
 import { extractApiError } from '../../core/api/errors';
 import type { ClientProfileResponse, StoreStats, StorePurchaseItem } from '../../core/types/api';
 import { Html5Qrcode } from 'html5-qrcode';
+import TabNav from '../../components/TabNav';
 
 interface ConfirmAction {
     type: 'purchase' | 'purchase_and_redeem';
@@ -341,28 +342,15 @@ export default function StorePos() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <div className="tab-nav">
-                    <button
-                        className={`tab-btn ${activeTab === 'scan' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('scan')}
-                    >
-                        Escanear
-                    </button>
-                    <button
-                        className={`tab-btn ${activeTab === 'purchases' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('purchases')}
-                    >
-                        Compras
-                    </button>
-                    <button
-                        className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('dashboard')}
-                    >
-                        Dashboard
-                    </button>
-                </div>
-            </div>
+            <TabNav
+                tabs={[
+                    { key: 'scan', label: 'Escanear' },
+                    { key: 'purchases', label: 'Compras' },
+                    { key: 'dashboard', label: 'Dashboard' },
+                ]}
+                activeTab={activeTab}
+                onTabChange={(key) => setActiveTab(key as typeof activeTab)}
+            />
 
             {/* === SCAN TAB === */}
             {activeTab === 'scan' && (
