@@ -274,27 +274,53 @@ export default function ClientDashboard() {
             )}
 
             {activeTab === 'promo' && (
-                <div className="card fade-in">
-                    <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mi Promoción</h2>
+                <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div className="mc-tarjeta">
+                        <img
+                            src="https://magicstore.com.ar/wp-content/uploads/2026/02/logo_club-scaled.png"
+                            alt="Magic Club"
+                            className="mc-logo-img"
+                        />
 
-                    <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-bg)', borderRadius: 'var(--border-radius)', textAlign: 'center', marginBottom: '1rem' }}>
-                        <span style={{ fontSize: '3rem', fontWeight: 800, color: reward_available ? 'var(--color-success)' : 'var(--color-primary)' }}>
-                            {active_purchases_count}
-                        </span>
-                        <span style={{ fontSize: '1.5rem', color: 'var(--color-text-muted)' }}>/ 5</span>
-                        <p style={{ marginTop: '0.25rem', fontWeight: 500, fontSize: '0.9rem' }}>compras registradas</p>
-                    </div>
-
-                    {reward_available ? (
-                        <div className="alert-success">
-                            <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>¡Recompensa Desbloqueada!</h3>
-                            <p style={{ fontSize: '0.9rem', wordBreak: 'break-word' }}>Tienes en promedio <strong>{fmtPrice(available_discount)}</strong> de descuento para usar en tu próxima compra presencial entregando tu código QR.</p>
+                        <div className="mc-subtitulo">
+                            {reward_available
+                                ? '¡Felicidades! Tu próxima compra es GRATIS*'
+                                : '¡Gracias por ser nuestro cliente!'}
                         </div>
-                    ) : (
-                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
-                            Te faltan <strong>{5 - active_purchases_count}</strong> compras para conseguir tu próximo descuento.
-                        </p>
-                    )}
+
+                        <div className="mc-estrellas-contenedor">
+                            {[1, 2, 3, 4, 5].map((i) => {
+                                const filled = i <= active_purchases_count;
+                                const isWinner = i === 5 && active_purchases_count >= 5;
+
+                                const imgSrc = isWinner
+                                    ? 'https://magicstore.com.ar/wp-content/uploads/2026/02/estrella-ganadora.png'
+                                    : filled
+                                        ? 'https://magicstore.com.ar/wp-content/uploads/2026/02/pngtree-silver-star-badge-png-image_9232942.png'
+                                        : 'https://magicstore.com.ar/wp-content/uploads/2026/02/Gemini_Generated_Image_sinafrsinafrsina-02.png';
+
+                                return (
+                                    <div key={i} className="mc-estrella-wrapper">
+                                        <img
+                                            src={imgSrc}
+                                            alt={`Estrella ${i}`}
+                                            className={isWinner ? 'mc-estrella-ganadora-activa' : 'mc-estrella-img'}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {reward_available ? (
+                            <div className="mc-mensaje-premio mc-mensaje-animado">
+                                Tenés {fmtPrice(available_discount)} de descuento para tu próxima compra
+                            </div>
+                        ) : (
+                            <div className="mc-info">
+                                Te faltan <strong>{5 - active_purchases_count}</strong> compra{5 - active_purchases_count !== 1 ? 's' : ''} para tu próximo descuento
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

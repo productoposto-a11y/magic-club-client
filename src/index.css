@@ -582,6 +582,109 @@ body {
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
+/* Magic Club Promo Card */
+.mc-tarjeta {
+  background-image: url('https://magicstore.com.ar/wp-content/uploads/2026/02/TARJETA-CLIENTES-1.jpg-1-1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 15px;
+  padding: 10px 20px 30px;
+  text-align: center;
+  color: white;
+  font-family: 'Montserrat', var(--font-family);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  margin: 0 auto 10px auto;
+  width: 100%;
+  max-width: 650px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.mc-logo-img {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  margin: 0 auto 10px auto;
+  display: block;
+  filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.2));
+}
+
+.mc-subtitulo {
+  font-size: clamp(1rem, 4vw, 1.4rem);
+  margin-bottom: 25px;
+  font-weight: 500;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.mc-info {
+  font-size: clamp(0.75rem, 3vw, 0.9rem);
+  margin-top: 25px;
+  font-weight: 400;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.mc-estrellas-contenedor {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3%;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.mc-estrella-wrapper {
+  width: 18%;
+  max-width: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mc-estrella-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.15));
+}
+
+.mc-estrella-ganadora-activa {
+  width: 110%;
+  max-width: 80px;
+  height: auto;
+  object-fit: contain;
+  animation: mc-latido 1.2s infinite;
+}
+
+.mc-mensaje-premio {
+  background-color: #ffffff;
+  color: #0c5aa4;
+  padding: 10px 15px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 25px;
+  font-weight: bold;
+  font-size: clamp(0.8rem, 3.4vw, 1rem);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.mc-mensaje-animado {
+  animation: mc-latido 1.5s infinite;
+}
+
+@keyframes mc-latido {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+  .mc-tarjeta {
+    padding: 25px 15px;
+  }
+}
+
 /* Responsive column visibility helpers */
 .hide-mobile {
   /* visible by default */
