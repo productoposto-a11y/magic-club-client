@@ -5,6 +5,51 @@ import type { ClientProfileResponse, Purchase, Reward } from '../../core/types/a
 import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSENotifications';
 import { toast } from 'sonner';
 import { QRCodeCanvas } from 'qrcode.react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix default marker icons for bundlers
+const defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+});
+L.Marker.prototype.options.icon = defaultIcon;
+
+interface StoreLocation {
+    name: string;
+    address: string;
+    city: string;
+    hours: string;
+    phone?: string;
+    webChanges: boolean;
+    coords: [number, number];
+    tag?: string;
+}
+
+const STORES: StoreLocation[] = [
+    { name: 'CABA - Florida', address: 'Florida 650', city: 'CABA, Buenos Aires', hours: 'Lunes a Sábados de 9 a 20hs', phone: '11 2180-5885', webChanges: true, coords: [-34.5995, -58.3745] },
+    { name: 'CABA - Lavalle', address: 'Lavalle 735', city: 'CABA, Buenos Aires', hours: 'Lunes a Sábados de 9 a 20hs', phone: '11 2654-8558', webChanges: true, coords: [-34.6020, -58.3770] },
+    { name: 'CABA - Shopping Abasto', address: 'Av. Corrientes 3247', city: 'CABA, Buenos Aires', hours: 'Todos los días de 10 a 22hs', webChanges: false, coords: [-34.6036, -58.4115] },
+    { name: 'CABA - Shopping Devoto', address: 'Quevedo 3365', city: 'CABA, Buenos Aires', hours: 'Do/Ju y feriados 10 a 21h. Vi Sa y vísperas de fer.', phone: '11 5802-6481', webChanges: false, coords: [-34.5983, -58.5136] },
+    { name: 'CABA - Villa Urquiza', address: 'Av. Triunvirato 4223', city: 'CABA, Buenos Aires', hours: 'PRÓXIMAMENTE', webChanges: false, coords: [-34.5730, -58.4890], tag: 'Próximamente' },
+    { name: 'GBA - Nine Shopping', address: 'Av. Victorica 1128', city: 'Moreno, Buenos Aires', hours: 'Todos los días 10h a 22h', phone: '11 2676-7046', webChanges: false, coords: [-34.6502, -58.7918] },
+    { name: 'GBA - Shopping Parque Avellaneda', address: 'Salida Acceso Sudeste', city: 'Sarandí, Buenos Aires', hours: 'Todos los días de 10 a 22hs', webChanges: false, coords: [-34.6780, -58.3400] },
+    { name: 'GBA - Shopping Soleil Premium Outlet', address: 'Av. Bernardo de Irigoyen 2678', city: 'Boulogne, Buenos Aires', hours: 'Todos los días de 10 a 22hs', phone: '11 2722-3787', webChanges: false, coords: [-34.5095, -58.5590] },
+    { name: 'GBA - Shopping Tortugas Open Mall', address: 'Ramal Pilar Km 36.5', city: 'Tortuguitas, Buenos Aires', hours: 'Todos los días de 10 a 22hs', phone: '11 2294-4038', webChanges: true, coords: [-34.4580, -58.7410] },
+    { name: 'INTERIOR - Caleta Olivia', address: 'San Martín 65', city: 'Caleta Olivia, Santa Cruz', hours: '', phone: '2974 00-3920', webChanges: false, coords: [-46.4396, -67.5165] },
+    { name: 'INTERIOR - Río Grande', address: 'Av. San Martín 670', city: 'Río Grande, Tierra del Fuego', hours: 'Lu/Sa de 10 a 13h y 15:30 a 20:30h', phone: '2964 35-1799', webChanges: false, coords: [-53.7877, -67.7094] },
+    { name: 'INTERIOR - San Luis Shopping', address: 'Av. Juan Gilberto Funes 260', city: 'San Luis', hours: 'Todos los días de 10 a 20hs', phone: '266 424-3636', webChanges: false, coords: [-33.3017, -66.3378] },
+    { name: 'INTERIOR - Shopping Annuar', address: 'Gral. Belgrano 563', city: 'Jujuy', hours: 'Todos los días de 10 a 20hs', phone: '3884 79-7458', webChanges: false, coords: [-24.1858, -65.2995] },
+    { name: 'INTERIOR - Shopping Patagonia', address: 'Onelli 447', city: 'Bariloche, Río Negro', hours: 'Todos los días de 10 a 22hs', phone: '2944 70-3613', webChanges: false, coords: [-41.1335, -71.3103] },
+    { name: 'INTERIOR - Shopping Portal Rosario', address: 'Nansen 323', city: 'Rosario, Santa Fe', hours: 'Todos los días de 11 a 21hs', phone: '3417 40-9610', webChanges: false, coords: [-32.9174, -60.6938] },
+    { name: 'Mayorista - Flores', address: 'Aranguren 2999', city: 'CABA, Buenos Aires', hours: 'Lu/Vi 7:30 a 17:30h. Sa 7:30 a 14:30h', phone: '11 3286-0432', webChanges: false, coords: [-34.6290, -58.4670], tag: 'Mayorista' },
+];
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -16,7 +61,7 @@ export default function ClientDashboard() {
     const [rewards, setRewards] = useState<Reward[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<'purchases' | 'qr' | 'promo'>('purchases');
+    const [activeTab, setActiveTab] = useState<'purchases' | 'qr' | 'promo' | 'locales'>('purchases');
     const [qrModalOpen, setQrModalOpen] = useState(false);
 
     const fetchAllData = useCallback(async () => {
@@ -148,6 +193,12 @@ export default function ClientDashboard() {
                         onClick={() => setActiveTab('promo')}
                     >
                         Promo
+                    </button>
+                    <button
+                        className={`tab-btn ${activeTab === 'locales' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('locales')}
+                    >
+                        Locales
                     </button>
                 </div>
             </div>
@@ -320,6 +371,57 @@ export default function ClientDashboard() {
                                 Te faltan <strong>{5 - active_purchases_count}</strong> compra{5 - active_purchases_count !== 1 ? 's' : ''} para tu próximo descuento
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'locales' && (
+                <div className="card fade-in">
+                    <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Nuestros Locales</h2>
+
+                    <div style={{ borderRadius: 'var(--border-radius)', overflow: 'hidden', marginBottom: '1rem' }}>
+                        <MapContainer
+                            center={[-38.0, -63.5]}
+                            zoom={4}
+                            style={{ height: '300px', width: '100%' }}
+                            scrollWheelZoom={false}
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            {STORES.map((store, idx) => (
+                                <Marker key={idx} position={store.coords}>
+                                    <Popup>
+                                        <strong>{store.name}</strong><br />
+                                        {store.address}<br />
+                                        {store.hours && <><small>{store.hours}</small><br /></>}
+                                        {store.phone && <><small>{store.phone}</small><br /></>}
+                                    </Popup>
+                                </Marker>
+                            ))}
+                        </MapContainer>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {STORES.map((store, idx) => (
+                            <div key={idx} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                    <strong style={{ fontSize: '0.9rem' }}>{store.name}</strong>
+                                    {store.tag && (
+                                        <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: '999px', backgroundColor: store.tag === 'Mayorista' ? '#fef3c7' : '#dbeafe', color: store.tag === 'Mayorista' ? '#92400e' : '#1e40af', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                            {store.tag}
+                                        </span>
+                                    )}
+                                </div>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '0.25rem 0' }}>{store.address}, {store.city}</p>
+                                {store.hours && <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{store.hours}</p>}
+                                {store.phone && <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{store.phone}</p>}
+                                <span style={{ fontSize: '0.7rem', color: store.webChanges ? '#166534' : '#991b1b' }}>
+                                    {store.webChanges ? 'Acepta cambios de compras web' : 'No acepta cambios de compras web'}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
