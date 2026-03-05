@@ -225,15 +225,11 @@ export default function ClientDashboard() {
                         style={{ cursor: 'pointer', border: '1px solid var(--color-border)', maxWidth: '100%' }}
                         onClick={() => setQrModalOpen(true)}
                     >
-                        <QRCodeCanvas value={client.qr_code || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
+                        <QRCodeCanvas value={client.dni || ''} size={180} bgColor="#FFFFFF" fgColor="#000000" level="L" includeMargin />
                     </div>
 
-                    <p style={{ marginTop: '1rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                        {(client.qr_code || '').toUpperCase()}
-                    </p>
-
                     {client.dni && (
-                        <p style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+                        <p style={{ marginTop: '1rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
                             DNI: {client.dni}
                         </p>
                     )}
@@ -257,14 +253,11 @@ export default function ClientDashboard() {
                         <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '2rem' }}>Mostrá este QR en caja</p>
 
                         <div style={{ padding: '24px', borderRadius: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0' }}>
-                            <QRCodeCanvas value={client.qr_code || ''} size={Math.min(260, window.innerWidth - 140)} bgColor="#FFFFFF" fgColor="#000000" level="H" includeMargin />
+                            <QRCodeCanvas value={client.dni || ''} size={Math.min(260, window.innerWidth - 140)} bgColor="#FFFFFF" fgColor="#000000" level="L" includeMargin />
                         </div>
 
-                        <p style={{ marginTop: '1.25rem', fontWeight: 600, letterSpacing: '3px', fontSize: '1rem', color: '#0f172a' }}>
-                            {(client.qr_code || '').toUpperCase()}
-                        </p>
                         {client.dni && (
-                            <p style={{ marginTop: '0.35rem', fontSize: '0.9rem', color: '#64748b' }}>
+                            <p style={{ marginTop: '1.25rem', fontWeight: 600, letterSpacing: '3px', fontSize: '1rem', color: '#0f172a' }}>
                                 DNI: {client.dni}
                             </p>
                         )}
