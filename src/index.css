@@ -6,7 +6,7 @@
  * extensions from overriding them.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: light only !important;
@@ -88,6 +88,8 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
+  will-change: transform, opacity;
+  contain: strict;
   background-image:
     radial-gradient(2px 2px at 10% 15%, rgba(212, 160, 23, 0.4) 50%, transparent 50%),
     radial-gradient(2px 2px at 25% 35%, rgba(212, 160, 23, 0.3) 50%, transparent 50%),
@@ -369,6 +371,15 @@ body::before {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+/* GPU-accelerated transitions for interactive elements */
+.card,
+.stat-card,
+.btn,
+.tabnav-dropdown {
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .stat-card .stat-label {

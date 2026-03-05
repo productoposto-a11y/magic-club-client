@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { lazy, Suspense, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
 import { getClientProfile, getClientPurchases, getClientRewards, getMyComments, createComment, getAllComments } from '../../core/api/clientService';
 import type { ClientProfileResponse, Purchase, Reward, Comment, CommentWithEmail } from '../../core/types/api';
@@ -6,32 +6,10 @@ import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSEN
 import { toast } from 'sonner';
 import { QRCodeCanvas } from 'qrcode.react';
 import TabNav from '../../components/TabNav';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import type { StoreLocation } from '../../components/StoresMap';
 
-// Fix default marker icons for bundlers
-const defaultIcon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-});
-L.Marker.prototype.options.icon = defaultIcon;
-
-interface StoreLocation {
-    name: string;
-    address: string;
-    city: string;
-    hours: string;
-    phone?: string;
-    webChanges: boolean;
-    coords: [number, number];
-    tag?: string;
-}
+// Lazy-load the heavy Leaflet map (only when Locales tab is opened)
+const StoresMap = lazy(() => import('../../components/StoresMap'));
 
 const STORES: StoreLocation[] = [
     { name: 'CABA - Florida', address: 'Florida 650', city: 'CABA, Buenos Aires', hours: 'Lunes a Sábados de 9 a 20hs', phone: '11 2180-5885', webChanges: true, coords: [-34.5995, -58.3745] },
@@ -214,7 +192,7 @@ export default function ClientDashboard() {
     const { client, status } = clientData;
     const { active_purchases_count, reward_available, available_discount } = status;
 
-    const totalSaved = rewards.reduce((acc, r) => acc + r.amount_discounted, 0);
+    const totalSaved = useMemo(() => rewards.reduce((acc, r) => acc + r.amount_discounted, 0), [rewards]);
 
     const getDaysRemaining = (p: Purchase): number | null => {
         const created = new Date(p.created_at);
@@ -223,6 +201,14 @@ export default function ClientDashboard() {
         const diff = Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return diff > 0 ? diff : 0;
     };
+
+    const tabs = useMemo(() => [
+        { key: 'purchases', label: 'Compras' },
+        { key: 'qr', label: 'Mi QR' },
+        { key: 'promo', label: 'Promo' },
+        { key: 'locales', label: 'Locales' },
+        { key: 'comments', label: 'Opiniones' },
+    ], []);
 
     const copyReferralCode = () => {
         if (client.referral_code) {
@@ -243,13 +229,7 @@ export default function ClientDashboard() {
 
             {/* Tab Navigation */}
             <TabNav
-                tabs={[
-                    { key: 'purchases', label: 'Compras' },
-                    { key: 'qr', label: 'Mi QR' },
-                    { key: 'promo', label: 'Promo' },
-                    { key: 'locales', label: 'Locales' },
-                    { key: 'comments', label: 'Opiniones' },
-                ]}
+                tabs={tabs}
                 activeTab={activeTab}
                 onTabChange={(key) => setActiveTab(key as typeof activeTab)}
             />
@@ -517,27 +497,9 @@ export default function ClientDashboard() {
                     <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Nuestros Locales</h2>
 
                     <div style={{ borderRadius: 'var(--border-radius)', overflow: 'hidden', marginBottom: '1rem' }}>
-                        <MapContainer
-                            center={[-38.0, -63.5]}
-                            zoom={4}
-                            style={{ height: '300px', width: '100%' }}
-                            scrollWheelZoom={false}
-                        >
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                            {STORES.map((store, idx) => (
-                                <Marker key={idx} position={store.coords}>
-                                    <Popup>
-                                        <strong>{store.name}</strong><br />
-                                        {store.address}<br />
-                                        {store.hours && <><small>{store.hours}</small><br /></>}
-                                        {store.phone && <><small>{store.phone}</small><br /></>}
-                                    </Popup>
-                                </Marker>
-                            ))}
-                        </MapContainer>
+                        <Suspense fallback={<div className="skeleton" style={{ height: '300px', borderRadius: 'var(--border-radius)' }} />}>
+                            <StoresMap stores={STORES} />
+                        </Suspense>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

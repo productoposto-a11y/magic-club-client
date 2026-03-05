@@ -4,7 +4,6 @@ import { getClientProfile, createPurchase, redeemReward } from '../../core/api/c
 import { getStoreStats, getStorePurchases, voidPurchase } from '../../core/api/storeService';
 import { extractApiError } from '../../core/api/errors';
 import type { ClientProfileResponse, StoreStats, StorePurchaseItem } from '../../core/types/api';
-import { Html5Qrcode } from 'html5-qrcode';
 import TabNav from '../../components/TabNav';
 
 interface ConfirmAction {
@@ -20,69 +19,185 @@ interface TxSummary {
 
 const fmtPrice = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function QrScannerModal({ onScan, onClose }: { onScan: (text: string) => void; onClose: () => void }) {
-    const scannerRef = useRef<Html5Qrcode | null>(null);
-    const hasScanned = useRef(false);
+/* ──────────────────────────────────────────────────────────────
+ * QR Scanner — Uses BarcodeDetector API (hardware-accelerated)
+ * when available, falls back to html5-qrcode (software decode).
+ * ────────────────────────────────────────────────────────────── */
 
-    const stopScanner = useCallback(async () => {
-        try {
-            const scanner = scannerRef.current;
-            if (scanner) {
-                scannerRef.current = null;
-                const state = scanner.getState();
-                if (state === 2 || state === 3) {
-                    await scanner.stop();
-                }
-                scanner.clear();
-            }
-        } catch { /* ignore cleanup errors */ }
+// Check once if native BarcodeDetector is available with QR support
+const nativeBarcodeSupported = (async () => {
+    try {
+        if (!('BarcodeDetector' in window)) return false;
+        const formats = await (window as any).BarcodeDetector.getSupportedFormats();
+        return Array.isArray(formats) && formats.includes('qr_code');
+    } catch {
+        return false;
+    }
+})();
+
+// Preferred camera constraints — lower resolution is faster for QR
+const CAMERA_CONSTRAINTS: MediaStreamConstraints = {
+    video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+    },
+    audio: false,
+};
+
+function QrScannerModal({ onScan, onClose }: { onScan: (text: string) => void; onClose: () => void }) {
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+    const hasScanned = useRef(false);
+    const rafRef = useRef<number>(0);
+    const fallbackRef = useRef<any>(null); // html5-qrcode instance
+    const [useNative, setUseNative] = useState<boolean | null>(null); // null = checking
+
+    // Cleanup everything
+    const cleanup = useCallback(() => {
+        // Cancel animation frame loop
+        if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = 0;
+        }
+        // Stop camera stream
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+        // Stop html5-qrcode fallback
+        if (fallbackRef.current) {
+            try {
+                const fb = fallbackRef.current;
+                fallbackRef.current = null;
+                const state = fb.getState();
+                if (state === 2 || state === 3) fb.stop().then(() => fb.clear()).catch(() => {});
+                else fb.clear();
+            } catch { /* ignore */ }
+        }
+    }, []);
+
+    // ─── NATIVE PATH: getUserMedia + BarcodeDetector ───
+    useEffect(() => {
+        let cancelled = false;
+
+        nativeBarcodeSupported.then(supported => {
+            if (cancelled) return;
+            setUseNative(supported);
+        });
+
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
-        const scanner = new Html5Qrcode('qr-reader', {
-            verbose: false,
-            useBarCodeDetectorIfSupported: true, // Native BarcodeDetector API (hardware-accelerated on Chrome/Android)
-        });
-        scannerRef.current = scanner;
+        if (useNative !== true) return;
+        let cancelled = false;
 
-        scanner.start(
-            { facingMode: { exact: 'environment' } },
-            {
-                fps: 30,
-                qrbox: { width: 200, height: 200 },
+        async function startNative() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(CAMERA_CONSTRAINTS);
+                if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+                streamRef.current = stream;
+
+                const video = videoRef.current;
+                if (!video) return;
+                video.srcObject = stream;
+                await video.play();
+
+                const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+
+                // Offscreen canvas for frame grabbing (reused)
+                const canvas = new OffscreenCanvas(video.videoWidth || 640, video.videoHeight || 480);
+                const ctx = canvas.getContext('2d')!;
+
+                let lastScanTime = 0;
+                const SCAN_INTERVAL = 80; // ~12 fps scanning, plenty for QR
+
+                const tick = async (now: number) => {
+                    if (cancelled || hasScanned.current) return;
+
+                    if (now - lastScanTime >= SCAN_INTERVAL && video.readyState >= 2) {
+                        lastScanTime = now;
+                        // Resize canvas to match video if needed
+                        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                        }
+                        ctx.drawImage(video, 0, 0);
+                        try {
+                            const results = await detector.detect(canvas);
+                            if (results.length > 0 && !hasScanned.current) {
+                                hasScanned.current = true;
+                                onScan(results[0].rawValue);
+                                return;
+                            }
+                        } catch { /* frame decode error, continue */ }
+                    }
+                    rafRef.current = requestAnimationFrame(tick);
+                };
+
+                rafRef.current = requestAnimationFrame(tick);
+            } catch {
+                // Camera failed — fall back to html5-qrcode
+                if (!cancelled) setUseNative(false);
+            }
+        }
+
+        startNative();
+
+        return () => {
+            cancelled = true;
+            cleanup();
+        };
+    }, [useNative, onScan, cleanup]);
+
+    // ─── FALLBACK PATH: html5-qrcode (software decode) ───
+    useEffect(() => {
+        if (useNative !== false) return;
+        let cancelled = false;
+
+        import('html5-qrcode').then(({ Html5Qrcode }) => {
+            if (cancelled) return;
+
+            const scanner = new Html5Qrcode('qr-reader-fallback', {
+                verbose: false,
+                useBarCodeDetectorIfSupported: false, // we already checked — not supported
+            });
+            fallbackRef.current = scanner;
+
+            const scanConfig = {
+                fps: 12,
+                qrbox: { width: 250, height: 250 },
                 disableFlip: true,
-                videoConstraints: {
-                    facingMode: { exact: 'environment' },
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                },
-            },
-            (decodedText) => {
+            };
+
+            const onSuccess = (decodedText: string) => {
                 if (hasScanned.current) return;
                 hasScanned.current = true;
                 onScan(decodedText);
-            },
-            () => { /* ignore scan failures */ },
-        ).catch(() => {
-            // Fallback: some devices don't support exact facingMode
+            };
+
             scanner.start(
-                { facingMode: 'environment' },
-                {
-                    fps: 30,
-                    qrbox: { width: 200, height: 200 },
-                    disableFlip: true,
-                },
-                (decodedText) => {
-                    if (hasScanned.current) return;
-                    hasScanned.current = true;
-                    onScan(decodedText);
-                },
-                () => {},
-            ).catch(() => { /* camera not available */ });
+                { facingMode: { exact: 'environment' } },
+                scanConfig, onSuccess, () => {},
+            ).catch(() => {
+                scanner.start(
+                    { facingMode: 'environment' },
+                    scanConfig, onSuccess, () => {},
+                ).catch(() => { /* camera not available */ });
+            });
         });
 
-        return () => { stopScanner(); };
-    }, [onScan, stopScanner]);
+        return () => {
+            cancelled = true;
+            cleanup();
+        };
+    }, [useNative, onScan, cleanup]);
+
+    const handleClose = () => {
+        cleanup();
+        onClose();
+    };
 
     return (
         <div className="qr-fullscreen-overlay" style={{ backgroundColor: '#000000' }}>
@@ -99,12 +214,52 @@ function QrScannerModal({ onScan, onClose }: { onScan: (text: string) => void; o
                         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Apuntá la cámara al QR del cliente</p>
                     </div>
 
-                    {/* Camera feed */}
-                    <div id="qr-reader" style={{ width: '100%', height: '100%' }} />
+                    {/* Native path: direct <video> element */}
+                    {useNative === true && (
+                        <video
+                            ref={videoRef}
+                            playsInline
+                            muted
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                    )}
+
+                    {/* Fallback path: html5-qrcode container */}
+                    {useNative === false && (
+                        <div id="qr-reader-fallback" style={{ width: '100%', height: '100%' }} />
+                    )}
+
+                    {/* Loading state while checking BarcodeDetector support */}
+                    {useNative === null && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                            <div className="spinner" />
+                        </div>
+                    )}
+
+                    {/* Scan overlay frame */}
+                    {useNative === true && (
+                        <div style={{
+                            position: 'absolute',
+                            width: '250px', height: '250px',
+                            border: '3px solid rgba(255,255,255,0.6)',
+                            borderRadius: '20px',
+                            boxShadow: '0 0 0 9999px rgba(0,0,0,0.35)',
+                            pointerEvents: 'none',
+                            zIndex: 5,
+                        }}>
+                            <div style={{
+                                position: 'absolute', left: 0, right: 0,
+                                height: '2px',
+                                background: 'linear-gradient(90deg, transparent, rgba(12,90,164,0.8), transparent)',
+                                animation: 'scanLine 2s ease-in-out infinite',
+                                zIndex: 6,
+                            }} />
+                        </div>
+                    )}
 
                     {/* Close button */}
                     <button
-                        onClick={() => { stopScanner().then(onClose); }}
+                        onClick={handleClose}
                         className="btn btn-outline"
                         style={{
                             position: 'absolute',

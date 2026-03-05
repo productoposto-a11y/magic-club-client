@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { apiClient, setTokens } from '../api/axios';
 import { parseJwt } from './parseJwt';
 
@@ -47,12 +47,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         attemptSilentRefresh();
     }, []);
 
-    const loginWithTokens = (accessToken: string, csrfToken: string, userClaims: AuthUser) => {
+    const loginWithTokens = useCallback((accessToken: string, csrfToken: string, userClaims: AuthUser) => {
         setTokens(accessToken, csrfToken);
         setUser(userClaims);
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         setLoggingOut(true);
         try {
             await apiClient.post('/tokens/logout');
@@ -63,10 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
             setLoggingOut(false);
         }
-    };
+    }, []);
+
+    const value = useMemo(() => ({
+        user, loading, loggingOut, loginWithTokens, logout,
+    }), [user, loading, loggingOut, loginWithTokens, logout]);
 
     return (
-        <AuthContext.Provider value={{ user, loading, loggingOut, loginWithTokens, logout }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

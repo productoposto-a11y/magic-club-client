@@ -1,10 +1,16 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './core/auth/AuthContext';
-import LoginScreen from './features/auth/LoginScreen';
-import StoreLoginScreen from './features/auth/StoreLoginScreen';
-import PasswordResetScreen from './features/auth/PasswordResetScreen';
 
-// Skeleton Loader shown while checking auth session
+// Lazy-loaded route components
+const LoginScreen = lazy(() => import('./features/auth/LoginScreen'));
+const StoreLoginScreen = lazy(() => import('./features/auth/StoreLoginScreen'));
+const PasswordResetScreen = lazy(() => import('./features/auth/PasswordResetScreen'));
+const ClientDashboard = lazy(() => import('./features/client/ClientDashboard'));
+const StorePos = lazy(() => import('./features/store/StorePos'));
+const AdminPanel = lazy(() => import('./features/admin/AdminPanel'));
+
+// Skeleton Loader shown while checking auth session or loading chunks
 const GlobalLoader = () => (
   <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
     <div className="page-header">
@@ -42,10 +48,6 @@ const PrivateRoute = ({ children, allowedRoles }: { children: React.ReactNode, a
   return children;
 };
 
-import ClientDashboard from './features/client/ClientDashboard';
-import StorePos from './features/store/StorePos';
-import AdminPanel from './features/admin/AdminPanel';
-
 function App() {
   const { loading } = useAuth();
 
@@ -57,50 +59,52 @@ function App() {
     <BrowserRouter>
       <div className="app-layout">
         <main className="main-content">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginScreen />} />
-            <Route path="/login/sucursal" element={<StoreLoginScreen />} />
-            <Route path="/recuperar" element={<PasswordResetScreen />} />
-            <Route path="/unauthorized" element={
-              <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>
-                <h2>No tienes permiso para ver esta página.</h2>
-              </div>
-            } />
+          <Suspense fallback={<GlobalLoader />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<LoginScreen />} />
+              <Route path="/login/sucursal" element={<StoreLoginScreen />} />
+              <Route path="/recuperar" element={<PasswordResetScreen />} />
+              <Route path="/unauthorized" element={
+                <div className="container" style={{ textAlign: 'center', marginTop: '4rem' }}>
+                  <h2>No tienes permiso para ver esta página.</h2>
+                </div>
+              } />
 
-            {/* Client App */}
-            <Route
-              path="/client"
-              element={
-                <PrivateRoute allowedRoles={['client', 'admin']}>
-                  <ClientDashboard />
-                </PrivateRoute>
-              }
-            />
+              {/* Client App */}
+              <Route
+                path="/client"
+                element={
+                  <PrivateRoute allowedRoles={['client', 'admin']}>
+                    <ClientDashboard />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Store App */}
-            <Route
-              path="/store"
-              element={
-                <PrivateRoute allowedRoles={['store_cashier', 'admin']}>
-                  <StorePos />
-                </PrivateRoute>
-              }
-            />
+              {/* Store App */}
+              <Route
+                path="/store"
+                element={
+                  <PrivateRoute allowedRoles={['store_cashier', 'admin']}>
+                    <StorePos />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Admin App */}
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute allowedRoles={['admin']}>
-                  <AdminPanel />
-                </PrivateRoute>
-              }
-            />
+              {/* Admin App */}
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute allowedRoles={['admin']}>
+                    <AdminPanel />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Default Redirect */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
+              {/* Default Redirect */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </BrowserRouter>
