@@ -9,22 +9,8 @@ import { extractApiError } from '../../core/api/errors';
 
 const EMAIL_RX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
-function validateCUIL(raw: string): boolean {
-    const cuil = raw.replace(/-/g, '');
-    if (!/^\d{11}$/.test(cuil)) return false;
-    const multipliers = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-    let sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(cuil[i]) * multipliers[i];
-    const remainder = sum % 11;
-    const expected = remainder === 0 ? 0 : remainder === 1 ? 9 : 11 - remainder;
-    return parseInt(cuil[10]) === expected;
-}
-
-function formatCUIL(value: string): string {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 10) return digits.slice(0, 2) + '-' + digits.slice(2);
-    return digits.slice(0, 2) + '-' + digits.slice(2, 10) + '-' + digits.slice(10);
+function formatDNI(value: string): string {
+    return value.replace(/\D/g, '').slice(0, 8);
 }
 
 export default function LoginScreen() {
@@ -45,6 +31,7 @@ export default function LoginScreen() {
     const [regPassword, setRegPassword] = useState('');
     const [regConfirmPassword, setRegConfirmPassword] = useState('');
     const [showRegPassword, setShowRegPassword] = useState(false);
+    const [regName, setRegName] = useState('');
     const [regDni, setRegDni] = useState('');
     const [regBirthday, setRegBirthday] = useState('');
     const [regReferral, setRegReferral] = useState('');
@@ -80,13 +67,9 @@ export default function LoginScreen() {
         e.preventDefault();
         setErrorLogin('');
 
-        const cleanCuil = loginDni.replace(/-/g, '');
-        if (!cleanCuil || !/^\d{11}$/.test(cleanCuil)) {
-            setErrorLogin('Ingresá un CUIL válido de 11 dígitos.');
-            return;
-        }
-        if (!validateCUIL(cleanCuil)) {
-            setErrorLogin('El CUIL ingresado no es válido. Verificá los números.');
+        const cleanDni = loginDni.replace(/\D/g, '');
+        if (!cleanDni || !/^\d{7,8}$/.test(cleanDni)) {
+            setErrorLogin('Ingresá un DNI válido de 7 u 8 dígitos.');
             return;
         }
         if (loginPassword.length < 8) {
@@ -97,10 +80,10 @@ export default function LoginScreen() {
         setLoadingLogin(true);
 
         try {
-            const data = await loginWithDNI(cleanCuil, loginPassword);
+            const data = await loginWithDNI(cleanDni, loginPassword);
             processAuthResponse(data, '/client');
         } catch (err: any) {
-            setErrorLogin(extractApiError(err, 'Credenciales incorrectas. Verificá tu CUIL y contraseña.'));
+            setErrorLogin(extractApiError(err, 'Credenciales incorrectas. Verificá tu DNI y contraseña.'));
         } finally {
             setLoadingLogin(false);
         }
@@ -110,6 +93,10 @@ export default function LoginScreen() {
         e.preventDefault();
         setErrorReg('');
 
+        if (!regName.trim()) {
+            setErrorReg('Ingresá tu nombre.');
+            return;
+        }
         if (!EMAIL_RX.test(regEmail)) {
             setErrorReg('Ingresa un correo electrónico válido.');
             return;
@@ -122,13 +109,9 @@ export default function LoginScreen() {
             setErrorReg('Las contraseñas no coinciden.');
             return;
         }
-        const cleanCuil = regDni.replace(/-/g, '');
-        if (!cleanCuil || !/^\d{11}$/.test(cleanCuil)) {
-            setErrorReg('El CUIL es obligatorio y debe tener 11 dígitos.');
-            return;
-        }
-        if (!validateCUIL(cleanCuil)) {
-            setErrorReg('El CUIL ingresado no es válido. Verificá los números.');
+        const cleanDni = regDni.replace(/\D/g, '');
+        if (!cleanDni || !/^\d{7,8}$/.test(cleanDni)) {
+            setErrorReg('El DNI es obligatorio y debe tener 7 u 8 dígitos.');
             return;
         }
 
@@ -136,9 +119,9 @@ export default function LoginScreen() {
         setSuccessReg('');
 
         try {
-            await registerClient(regEmail, regPassword, cleanCuil, regBirthday || undefined, regReferral || undefined);
-            setSuccessReg('¡Cuenta creada con éxito! Ahora podés iniciar sesión con tu CUIL.');
-            setLoginDni(formatCUIL(cleanCuil));
+            await registerClient(regEmail, regPassword, cleanDni, regName.trim(), regBirthday || undefined, regReferral || undefined);
+            setSuccessReg('¡Cuenta creada con éxito! Ahora podés iniciar sesión con tu DNI.');
+            setLoginDni(cleanDni);
             setTimeout(() => setActiveTab('login'), 2000);
         } catch (err: any) {
             setErrorReg(extractApiError(err, 'Error al crear la cuenta.'));
@@ -175,13 +158,13 @@ export default function LoginScreen() {
                 {activeTab === 'login' ? (
                     <form onSubmit={handleLogin}>
                         <div className="input-group">
-                            <label className="input-label">Tu CUIL</label>
+                            <label className="input-label">Tu DNI</label>
                             <input
                                 type="text"
                                 className="input-field"
-                                placeholder="Ej. 20-35123456-9"
+                                placeholder="Ej. 35123456"
                                 value={loginDni}
-                                onChange={(e) => setLoginDni(formatCUIL(e.target.value))}
+                                onChange={(e) => setLoginDni(formatDNI(e.target.value))}
                                 inputMode="numeric"
                                 required
                             />
@@ -222,6 +205,18 @@ export default function LoginScreen() {
                 ) : (
                     <form onSubmit={handleRegister}>
                         {successReg && <div className="alert-success">{successReg}</div>}
+
+                        <div className="input-group">
+                            <label className="input-label">Nombre</label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Ej. Juan Pérez"
+                                value={regName}
+                                onChange={(e) => setRegName(e.target.value)}
+                                required
+                            />
+                        </div>
 
                         <div className="input-group">
                             <label className="input-label">Correo Electrónico</label>
@@ -270,18 +265,18 @@ export default function LoginScreen() {
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">CUIL</label>
+                            <label className="input-label">DNI</label>
                             <input
                                 type="text"
                                 className="input-field"
-                                placeholder="Ej. 20-35123456-9"
+                                placeholder="Ej. 35123456"
                                 value={regDni}
-                                onChange={(e) => setRegDni(formatCUIL(e.target.value))}
+                                onChange={(e) => setRegDni(formatDNI(e.target.value))}
                                 inputMode="numeric"
                                 required
                             />
-                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                                Podés consultarlo en <a href="https://www.anses.gob.ar/consulta/constancia-de-cuil" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)' }}>ANSES</a>
+                            <p style={{ fontSize: '0.72rem', color: '#b91c1c', marginTop: '0.35rem', lineHeight: 1.4 }}>
+                                Debe ser tu DNI real. Las cuentas con DNI ajeno serán eliminadas.
                             </p>
                         </div>
 

@@ -396,17 +396,17 @@ export default function StorePos() {
 
                                 <form onSubmit={handleManualSearch}>
                                     <div className="input-group">
-                                        <label className="input-label">Ingresar CUIL manualmente</label>
+                                        <label className="input-label">Ingresar DNI manualmente</label>
                                         <input
                                             type="text"
                                             className="input-field"
-                                            placeholder="Ej. 20-35123456-9"
+                                            placeholder="Ej. 35123456"
                                             value={searchInput}
                                             onChange={(e) => setSearchInput(e.target.value)}
                                         />
                                     </div>
                                     <button type="submit" className="btn btn-outline" style={{ width: '100%' }} disabled={!searchInput}>
-                                        Buscar por CUIL
+                                        Buscar por DNI
                                     </button>
                                 </form>
 
@@ -433,7 +433,7 @@ export default function StorePos() {
 
                         <div style={{ padding: '1rem', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', marginBottom: '1.5rem' }}>
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{clientData.client.email}</h3>
-                            {clientData.client.dni && <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>CUIL: {clientData.client.dni}</p>}
+                            {clientData.client.dni && <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>DNI: {clientData.client.dni}</p>}
                             <p>Compras activas: <strong>{clientData.status.active_purchases_count} / 5</strong></p>
                         </div>
 
@@ -569,7 +569,7 @@ export default function StorePos() {
                                             <th className="hide-mobile">Pedido</th>
                                             <th>Fecha</th>
                                             <th className="hide-mobile">Cliente</th>
-                                            <th>CUIL</th>
+                                            <th>DNI</th>
                                             <th>Monto</th>
                                             <th>Estado</th>
                                             <th></th>

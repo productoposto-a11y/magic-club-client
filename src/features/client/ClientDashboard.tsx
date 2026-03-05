@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../core/auth/AuthContext';
-import { getClientProfile, getClientPurchases, getClientRewards, getMyComments, createComment } from '../../core/api/clientService';
-import type { ClientProfileResponse, Purchase, Reward, Comment } from '../../core/types/api';
+import { getClientProfile, getClientPurchases, getClientRewards, getMyComments, createComment, getAllComments } from '../../core/api/clientService';
+import type { ClientProfileResponse, Purchase, Reward, Comment, CommentWithEmail } from '../../core/types/api';
 import { useSSENotifications, type SSEEventData } from '../../core/hooks/useSSENotifications';
 import { toast } from 'sonner';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -71,6 +71,11 @@ export default function ClientDashboard() {
     const [commentBody, setCommentBody] = useState('');
     const [commentRating, setCommentRating] = useState(5);
     const [submittingComment, setSubmittingComment] = useState(false);
+    const [commentSubTab, setCommentSubTab] = useState<'all' | 'mine' | 'new'>('all');
+    const [allComments, setAllComments] = useState<CommentWithEmail[]>([]);
+    const [allCommentsTotal, setAllCommentsTotal] = useState(0);
+    const [allCommentsPage, setAllCommentsPage] = useState(1);
+    const [loadingAllComments, setLoadingAllComments] = useState(false);
 
     const fetchAllData = useCallback(async () => {
         if (!user?.email) return;
@@ -116,11 +121,21 @@ export default function ClientDashboard() {
     }, [user?.email]);
 
     useEffect(() => {
-        if (activeTab === 'comments' && comments.length === 0) {
+        if (activeTab === 'comments' && commentSubTab === 'mine' && comments.length === 0) {
             setLoadingComments(true);
             getMyComments().then(setComments).catch(() => {}).finally(() => setLoadingComments(false));
         }
-    }, [activeTab]);
+    }, [activeTab, commentSubTab]);
+
+    useEffect(() => {
+        if (activeTab === 'comments' && commentSubTab === 'all') {
+            setLoadingAllComments(true);
+            getAllComments(allCommentsPage)
+                .then(data => { setAllComments(data.comments || []); setAllCommentsTotal(data.metadata.total_records); })
+                .catch(() => {})
+                .finally(() => setLoadingAllComments(false));
+        }
+    }, [activeTab, commentSubTab, allCommentsPage]);
 
     const handleSubmitComment = async () => {
         if (!commentStore || !commentBody.trim()) {
@@ -369,7 +384,7 @@ export default function ClientDashboard() {
 
                     {client.dni && (
                         <p style={{ marginTop: '1rem', fontWeight: 600, letterSpacing: '2px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                            CUIL: {client.dni}
+                            DNI: {client.dni}
                         </p>
                     )}
 
@@ -453,7 +468,7 @@ export default function ClientDashboard() {
 
                         {client.dni && (
                             <p style={{ marginTop: '1.25rem', fontWeight: 600, letterSpacing: '3px', fontSize: '1rem', color: '#0f172a' }}>
-                                CUIL: {client.dni}
+                                DNI: {client.dni}
                             </p>
                         )}
 
@@ -571,96 +586,165 @@ export default function ClientDashboard() {
             )}
 
             {activeTab === 'comments' && (
-                <div className="card fade-in">
-                    <h2 style={{ marginBottom: '1.25rem', fontSize: '1.15rem' }}>Dejanos tu opinión</h2>
-
-                    {/* Comment Form */}
-                    <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div className="input-group" style={{ marginBottom: 0 }}>
-                            <label className="input-label">Sucursal</label>
-                            <select
-                                className="input-field"
-                                value={commentStore}
-                                onChange={(e) => setCommentStore(e.target.value)}
+                <div className="fade-in">
+                    {/* Sub-tab nav */}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                        {([['all', 'Todas'], ['mine', 'Mis opiniones'], ['new', 'Escribir']] as const).map(([key, label]) => (
+                            <button
+                                key={key}
+                                className={`btn ${commentSubTab === key ? 'btn-primary' : 'btn-outline'}`}
+                                style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem', minHeight: '34px' }}
+                                onClick={() => setCommentSubTab(key)}
                             >
-                                <option value="">Seleccionar sucursal...</option>
-                                <option value="Tienda Online">Tienda Online</option>
-                                {STORES.filter(s => !s.tag || s.tag !== 'Próximamente').map((s, i) => (
-                                    <option key={i} value={s.name}>{s.name}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="input-group" style={{ marginBottom: 0 }}>
-                            <label className="input-label">Calificación</label>
-                            <div style={{ display: 'flex', gap: '0.35rem' }}>
-                                {[1, 2, 3, 4, 5].map(n => (
-                                    <button
-                                        key={n}
-                                        type="button"
-                                        onClick={() => setCommentRating(n)}
-                                        style={{
-                                            background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.1rem',
-                                            color: n <= commentRating ? '#f59e0b' : '#d1d5db',
-                                            transition: 'color 0.15s',
-                                        }}
-                                    >
-                                        ★
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="input-group" style={{ marginBottom: 0 }}>
-                            <label className="input-label">Comentario</label>
-                            <textarea
-                                className="input-field"
-                                rows={3}
-                                placeholder="Contanos tu experiencia..."
-                                value={commentBody}
-                                onChange={(e) => setCommentBody(e.target.value.slice(0, 1000))}
-                                style={{ resize: 'vertical', minHeight: '80px' }}
-                            />
-                            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>{commentBody.length}/1000</span>
-                        </div>
-
-                        <button
-                            className="btn btn-primary"
-                            onClick={handleSubmitComment}
-                            disabled={submittingComment}
-                            style={{ alignSelf: 'flex-start' }}
-                        >
-                            {submittingComment ? 'Enviando...' : 'Enviar opinión'}
-                        </button>
+                                {label}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* My Comments List */}
-                    {loadingComments ? (
-                        <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: '60px', marginBottom: '0.5rem', borderRadius: '8px' }}></div>)}</div>
-                    ) : comments.length === 0 ? (
-                        <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '1rem 0' }}>Aún no dejaste ninguna opinión.</p>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {comments.map(c => (
-                                <div key={c.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                                        <strong style={{ fontSize: '0.85rem' }}>{c.store_name}</strong>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                                            {new Date(c.created_at).toLocaleDateString()}
-                                        </span>
+                    {/* All Comments */}
+                    {commentSubTab === 'all' && (
+                        <div className="card">
+                            <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Opiniones de clientes</h2>
+                            {loadingAllComments ? (
+                                <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: '60px', marginBottom: '0.5rem', borderRadius: '8px' }}></div>)}</div>
+                            ) : allComments.length === 0 ? (
+                                <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '1.5rem 0' }}>Aún no hay opiniones.</p>
+                            ) : (
+                                <>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {allComments.map(c => (
+                                            <div key={c.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                                                    <div>
+                                                        <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>{c.client_name || c.client_email}</span>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>{c.store_name}</span>
+                                                    </div>
+                                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                                                        {new Date(c.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>
+                                                    {'★'.repeat(c.rating)}{'☆'.repeat(5 - c.rating)}
+                                                </div>
+                                                <p style={{ fontSize: '0.85rem', margin: 0 }}>{c.body}</p>
+                                                {c.admin_reply && (
+                                                    <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: '#eff6ff', borderRadius: '8px', borderLeft: '3px solid var(--color-primary)' }}>
+                                                        <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', margin: '0 0 0.2rem 0' }}>Respuesta de Magic Club</p>
+                                                        <p style={{ fontSize: '0.8rem', margin: 0 }}>{c.admin_reply}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>
-                                        {'★'.repeat(c.rating)}{'☆'.repeat(5 - c.rating)}
-                                    </div>
-                                    <p style={{ fontSize: '0.85rem', margin: 0 }}>{c.body}</p>
-                                    {c.admin_reply && (
-                                        <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: '#eff6ff', borderRadius: '8px', borderLeft: '3px solid var(--color-primary)' }}>
-                                            <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', margin: '0 0 0.2rem 0' }}>Respuesta de Magic Club</p>
-                                            <p style={{ fontSize: '0.8rem', margin: 0 }}>{c.admin_reply}</p>
+                                    {Math.ceil(allCommentsTotal / 20) > 1 && (
+                                        <div className="pagination" style={{ marginTop: '1rem' }}>
+                                            <button className="btn btn-outline" disabled={allCommentsPage <= 1} onClick={() => setAllCommentsPage(p => p - 1)}>Anterior</button>
+                                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Página {allCommentsPage} de {Math.ceil(allCommentsTotal / 20)}</span>
+                                            <button className="btn btn-outline" disabled={allCommentsPage >= Math.ceil(allCommentsTotal / 20)} onClick={() => setAllCommentsPage(p => p + 1)}>Siguiente</button>
                                         </div>
                                     )}
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* My Comments */}
+                    {commentSubTab === 'mine' && (
+                        <div className="card">
+                            <h2 style={{ marginBottom: '1rem', fontSize: '1.15rem' }}>Mis opiniones</h2>
+                            {loadingComments ? (
+                                <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: '60px', marginBottom: '0.5rem', borderRadius: '8px' }}></div>)}</div>
+                            ) : comments.length === 0 ? (
+                                <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '1.5rem 0' }}>Aún no dejaste ninguna opinión.</p>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {comments.map(c => (
+                                        <div key={c.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                                                <strong style={{ fontSize: '0.85rem' }}>{c.store_name}</strong>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                                    {new Date(c.created_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: '0.8rem', color: '#f59e0b', marginBottom: '0.3rem' }}>
+                                                {'★'.repeat(c.rating)}{'☆'.repeat(5 - c.rating)}
+                                            </div>
+                                            <p style={{ fontSize: '0.85rem', margin: 0 }}>{c.body}</p>
+                                            {c.admin_reply && (
+                                                <div style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: '#eff6ff', borderRadius: '8px', borderLeft: '3px solid var(--color-primary)' }}>
+                                                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', margin: '0 0 0.2rem 0' }}>Respuesta de Magic Club</p>
+                                                    <p style={{ fontSize: '0.8rem', margin: 0 }}>{c.admin_reply}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            )}
+                        </div>
+                    )}
+
+                    {/* New Comment Form */}
+                    {commentSubTab === 'new' && (
+                        <div className="card">
+                            <h2 style={{ marginBottom: '1.25rem', fontSize: '1.15rem' }}>Dejanos tu opinión</h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <div className="input-group" style={{ marginBottom: 0 }}>
+                                    <label className="input-label">Sucursal</label>
+                                    <select
+                                        className="input-field"
+                                        value={commentStore}
+                                        onChange={(e) => setCommentStore(e.target.value)}
+                                    >
+                                        <option value="">Seleccionar sucursal...</option>
+                                        <option value="Tienda Online">Tienda Online</option>
+                                        {STORES.filter(s => !s.tag || s.tag !== 'Próximamente').map((s, i) => (
+                                            <option key={i} value={s.name}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="input-group" style={{ marginBottom: 0 }}>
+                                    <label className="input-label">Calificación</label>
+                                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                        {[1, 2, 3, 4, 5].map(n => (
+                                            <button
+                                                key={n}
+                                                type="button"
+                                                onClick={() => setCommentRating(n)}
+                                                style={{
+                                                    background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.5rem', padding: '0.1rem',
+                                                    color: n <= commentRating ? '#f59e0b' : '#d1d5db',
+                                                    transition: 'color 0.15s',
+                                                }}
+                                            >
+                                                ★
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="input-group" style={{ marginBottom: 0 }}>
+                                    <label className="input-label">Comentario</label>
+                                    <textarea
+                                        className="input-field"
+                                        rows={3}
+                                        placeholder="Contanos tu experiencia..."
+                                        value={commentBody}
+                                        onChange={(e) => setCommentBody(e.target.value.slice(0, 1000))}
+                                        style={{ resize: 'vertical', minHeight: '80px' }}
+                                    />
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', textAlign: 'right' }}>{commentBody.length}/1000</span>
+                                </div>
+
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleSubmitComment}
+                                    disabled={submittingComment}
+                                    style={{ alignSelf: 'flex-start' }}
+                                >
+                                    {submittingComment ? 'Enviando...' : 'Enviar opinión'}
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>

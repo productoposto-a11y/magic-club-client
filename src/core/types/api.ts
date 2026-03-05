@@ -2,6 +2,7 @@ export interface ClientInfo {
   id: string;
   user_id: string;
   email: string;
+  name?: string;
   dni?: string;
   qr_code?: string;
   birthday?: string;
@@ -108,6 +109,7 @@ export interface Comment {
 
 export interface CommentWithEmail extends Comment {
   client_email: string;
+  client_name?: string;
 }
 
 export interface PaginatedComments {

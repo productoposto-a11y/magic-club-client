@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import type { ClientProfileResponse, Purchase, Reward, Comment } from '../types/api';
+import type { ClientProfileResponse, Purchase, Reward, Comment, CommentWithEmail } from '../types/api';
 
 export async function getClientProfile(identifier: string): Promise<ClientProfileResponse> {
   const res = await apiClient.get(`/clients/${identifier}`);
@@ -27,11 +27,12 @@ export async function redeemReward(clientId: string, storeId: string, amountDisc
 
 export async function registerClient(
   email: string, password: string, dni: string,
-  birthday?: string, referralCodeUsed?: string,
+  name?: string, birthday?: string, referralCodeUsed?: string,
 ): Promise<{ client: ClientProfileResponse['client'] }> {
   const res = await apiClient.post('/clients', {
     email,
     password,
+    name: name || undefined,
     dni,
     birthday: birthday || undefined,
     referral_code_used: referralCodeUsed || undefined,
@@ -57,4 +58,9 @@ export async function getMyComments(): Promise<Comment[]> {
 export async function createComment(storeName: string, body: string, rating: number): Promise<Comment> {
   const res = await apiClient.post('/comments', { store_name: storeName, body, rating });
   return res.data.comment;
+}
+
+export async function getAllComments(page = 1, pageSize = 20): Promise<{ comments: CommentWithEmail[]; metadata: { total_records: number } }> {
+  const res = await apiClient.get('/comments', { params: { page, page_size: pageSize } });
+  return res.data;
 }

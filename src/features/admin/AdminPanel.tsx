@@ -212,7 +212,7 @@ export default function AdminPanel() {
                                     <thead>
                                         <tr>
                                             <th>Email</th>
-                                            <th>CUIL</th>
+                                            <th>DNI</th>
                                             <th>Compras Activas</th>
                                             <th className="hide-mobile">Total Compras</th>
                                             <th className="hide-mobile">Premios</th>
@@ -349,7 +349,7 @@ export default function AdminPanel() {
                                     <div key={c.id} style={{ padding: '1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
                                             <div>
-                                                <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{c.client_email}</span>
+                                                <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{c.client_name || c.client_email}</span>
                                                 <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>{c.store_name}</span>
                                             </div>
                                             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
