@@ -372,18 +372,18 @@ export default function ClientDashboard() {
                     {/* Profile Info */}
                     <div style={{ width: '100%', marginTop: '1.5rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: 'var(--color-text-muted)' }}>Email</span>
-                                <span style={{ fontWeight: 500 }}>{client.email}</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', overflow: 'hidden' }}>
+                                <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>Email</span>
+                                <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{client.email}</span>
                             </div>
                             {client.birthday && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ color: 'var(--color-text-muted)' }}>Cumpleaños</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                    <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>Cumpleaños</span>
                                     <span style={{ fontWeight: 500 }}>{new Date(client.birthday + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}</span>
                                 </div>
                             )}
                             {client.referral_code && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
                                     <span style={{ color: 'var(--color-text-muted)' }}>Tu código de referido</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <span style={{ fontWeight: 700, letterSpacing: '2px', fontFamily: 'monospace', fontSize: '0.95rem', color: 'var(--color-primary)' }}>{client.referral_code}</span>
@@ -399,8 +399,8 @@ export default function ClientDashboard() {
                                 </div>
                             )}
                             {client.referred_by && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ color: 'var(--color-text-muted)' }}>Referido por</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                    <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>Referido por</span>
                                     <span style={{ fontWeight: 500, fontFamily: 'monospace' }}>{client.referred_by}</span>
                                 </div>
                             )}
@@ -521,7 +521,7 @@ export default function ClientDashboard() {
                         {STORES.map((store, idx) => (
                             <div key={idx} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                                    <strong style={{ fontSize: '0.9rem' }}>{store.name}</strong>
+                                    <strong style={{ fontSize: '0.9rem', minWidth: 0, wordBreak: 'break-word' }}>{store.name}</strong>
                                     {store.tag && (
                                         <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: '999px', backgroundColor: store.tag === 'Mayorista' ? '#fef3c7' : '#dbeafe', color: store.tag === 'Mayorista' ? '#92400e' : '#1e40af', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             {store.tag}
@@ -543,12 +543,12 @@ export default function ClientDashboard() {
             {activeTab === 'comments' && (
                 <div className="fade-in">
                     {/* Sub-tab nav */}
-                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
                         {([['all', 'Todas'], ['mine', 'Mis opiniones'], ['new', 'Escribir']] as const).map(([key, label]) => (
                             <button
                                 key={key}
                                 className={`btn ${commentSubTab === key ? 'btn-primary' : 'btn-outline'}`}
-                                style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem', minHeight: '34px' }}
+                                style={{ fontSize: '0.8rem', padding: '0.4rem 0.85rem', minHeight: '34px', flex: '1 1 auto' }}
                                 onClick={() => setCommentSubTab(key)}
                             >
                                 {label}
@@ -569,12 +569,12 @@ export default function ClientDashboard() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                         {allComments.map(c => (
                                             <div key={c.id} style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--color-bg)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                                                    <div>
-                                                        <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>{c.client_name || c.client_email}</span>
-                                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>{c.store_name}</span>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                                                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                                                        <span style={{ fontWeight: 600, fontSize: '0.8rem', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.client_name || c.client_email}</span>
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.store_name}</span>
                                                     </div>
-                                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                                                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', flexShrink: 0 }}>
                                                         {new Date(c.created_at).toLocaleDateString()}
                                                     </span>
                                                 </div>

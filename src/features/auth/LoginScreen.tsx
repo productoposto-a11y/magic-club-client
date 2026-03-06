@@ -140,16 +140,16 @@ export default function LoginScreen() {
 
             <div className="card" style={{ width: '100%', maxWidth: '400px' }}>
 
-                <div className="tab-nav">
+                <div className="pill-nav" style={{ marginBottom: '1.25rem' }}>
                     <button
                         onClick={() => setActiveTab('login')}
-                        className={`tab-btn ${activeTab === 'login' ? 'active' : ''}`}
+                        className={`pill-btn ${activeTab === 'login' ? 'active' : ''}`}
                     >
                         Ingreso
                     </button>
                     <button
                         onClick={() => setActiveTab('register')}
-                        className={`tab-btn ${activeTab === 'register' ? 'active' : ''}`}
+                        className={`pill-btn ${activeTab === 'register' ? 'active' : ''}`}
                     >
                         Registro
                     </button>
