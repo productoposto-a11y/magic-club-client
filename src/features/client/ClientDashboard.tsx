@@ -158,11 +158,26 @@ export default function ClientDashboard() {
     const totalSaved = useMemo(() => rewards.reduce((acc, r) => acc + r.amount_discounted, 0), [rewards]);
 
     const tabs = useMemo(() => [
-        { key: 'purchases', label: 'Compras' },
-        { key: 'qr', label: 'Mi QR' },
-        { key: 'promo', label: 'Promo' },
-        { key: 'locales', label: 'Locales' },
-        { key: 'comments', label: 'Opiniones' },
+        {
+            key: 'purchases', label: 'Compras',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+        },
+        {
+            key: 'qr', label: 'Mi QR',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><path d="M3 7V5a2 2 0 012-2h2"/><path d="M17 3h2a2 2 0 012 2v2"/><path d="M21 17v2a2 2 0 01-2 2h-2"/><path d="M7 21H5a2 2 0 01-2-2v-2"/><rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/><path d="M14 14h3v3h-3z"/></svg>,
+        },
+        {
+            key: 'promo', label: 'Promo',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+        },
+        {
+            key: 'locales', label: 'Locales',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+        },
+        {
+            key: 'comments', label: 'Opiniones',
+            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+        },
     ], []);
 
     if (loading) {
@@ -218,7 +233,7 @@ export default function ClientDashboard() {
     };
 
     return (
-        <div className="container" style={{ paddingBottom: '2rem' }}>
+        <div className="container bottom-nav-page">
 
             <div className="page-header">
                 <h1>Magic Club</h1>
