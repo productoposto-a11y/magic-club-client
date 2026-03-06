@@ -155,6 +155,16 @@ export default function ClientDashboard() {
         enabled: !loading && user?.role === 'client',
     });
 
+    const totalSaved = useMemo(() => rewards.reduce((acc, r) => acc + r.amount_discounted, 0), [rewards]);
+
+    const tabs = useMemo(() => [
+        { key: 'purchases', label: 'Compras' },
+        { key: 'qr', label: 'Mi QR' },
+        { key: 'promo', label: 'Promo' },
+        { key: 'locales', label: 'Locales' },
+        { key: 'comments', label: 'Opiniones' },
+    ], []);
+
     if (loading) {
         return (
             <div className="container" style={{ paddingBottom: '2rem' }}>
@@ -192,8 +202,6 @@ export default function ClientDashboard() {
     const { client, status } = clientData;
     const { active_purchases_count, reward_available, available_discount } = status;
 
-    const totalSaved = useMemo(() => rewards.reduce((acc, r) => acc + r.amount_discounted, 0), [rewards]);
-
     const getDaysRemaining = (p: Purchase): number | null => {
         const created = new Date(p.created_at);
         const expires = new Date(created.getTime() + 90 * 24 * 60 * 60 * 1000);
@@ -201,14 +209,6 @@ export default function ClientDashboard() {
         const diff = Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return diff > 0 ? diff : 0;
     };
-
-    const tabs = useMemo(() => [
-        { key: 'purchases', label: 'Compras' },
-        { key: 'qr', label: 'Mi QR' },
-        { key: 'promo', label: 'Promo' },
-        { key: 'locales', label: 'Locales' },
-        { key: 'comments', label: 'Opiniones' },
-    ], []);
 
     const copyReferralCode = () => {
         if (client.referral_code) {
